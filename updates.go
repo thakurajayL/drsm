@@ -2,12 +2,12 @@ package drsm
 
 import (
 	"context"
-	"log"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 )
 
-// handle incoming db notification and update 
+// handle incoming db notification and update
 
 func handleDbUpdates(d *Drsm) {
 	database := MongoDBLibrary.Client.Database(d.db.Name)
@@ -25,14 +25,13 @@ func handleDbUpdates(d *Drsm) {
 }
 
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
-	log.Println("iterate change stream for timeout ",d)
-	
-	// case 1: Update Global Table in the Drsm with new chunk. There is possiblity of newPod added
-	// case 2: If podLivenessCheck results in Pod Down. Then inform Claim Thread. 
-	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
-	// case 3: Update Global Table in the Drsm, existing chunk new owner = ORPHAN 
-	// 	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
+	log.Println("iterate change stream for timeout ", d)
 
+	// case 1: Update Global Table in the Drsm with new chunk. There is possiblity of newPod added
+	// case 2: If podLivenessCheck results in Pod Down. Then inform Claim Thread.
+	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
+	// case 3: Update Global Table in the Drsm, existing chunk new owner = ORPHAN
+	// 	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
 
 	defer stream.Close(routineCtx)
 	for stream.Next(routineCtx) {
@@ -46,7 +45,7 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 	}
 }
 
-func startDiscovery (d *Drsm) {
+func startDiscovery(d *Drsm) {
 	// we discover other endpoints sharing same shared resources through mongoDB streaming
 	// Temp : punch liveness in DB every 2 second
 	// DB will send notification to every other POD..
@@ -58,33 +57,32 @@ func startDiscovery (d *Drsm) {
 func punchLiveness(d *Drsm) {
 	// write to DB - signature every 2 second
 	ticker := time.NewTicker(2000 * time.Millisecond)
-    for {
-        select {
-        case t := <-ticker.C:
+	for {
+		select {
+		case t := <-ticker.C:
 			fmt.Println("Tick at", t)
-        }
-    }
-    
+		}
+	}
+
 }
 
 func checkLiveness(d *Drsm) {
 	// go through all pods to see if any pod is showing same old counter
 	// Mark it down locally
-	// Claiming the chunks can be reactive 
+	// Claiming the chunks can be reactive
 	ticker := time.NewTicker(5000 * time.Millisecond)
-    for {
-        select {
-        case t := <-ticker.C:
-			for k, p := range d.podMap  {
+	for {
+		select {
+		case t := <-ticker.C:
+			for k, p := range d.podMap {
 				p.mu.Lock()
 				if p.prevCount == p.currentCount {
-					d.podDown <- k  // let claim thread work chunks assigned by this Pod. 
+					d.podDown <- k // let claim thread work chunks assigned by this Pod.
 				} else {
 					p.prevCount = p.currentCount
 				}
 				p.mu.Unlock()
 			}
 		}
-    }
+	}
 }
-

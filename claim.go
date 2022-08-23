@@ -1,7 +1,9 @@
 package drsm
+
 import (
-"fmt"
+	"fmt"
 )
+
 func (d *Drsm) podDown() {
 	for {
 		select {
