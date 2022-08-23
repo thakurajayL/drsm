@@ -18,7 +18,7 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 
 	//connect to DB
 	MongoDBLibrary.SetMongoDB(db.Name, db.Url)
-	log.Println("SetMongoDB done ", db.name)
+	log.Println("SetMongoDB done ", db.Name)
 	go handleDbUpdates(d)
 	go startDiscovery(d)
 	return d, nil
