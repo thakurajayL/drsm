@@ -60,7 +60,7 @@ func punchLiveness(d *Drsm) {
 	ticker := time.NewTicker(2000 * time.Millisecond)
 	for {
 		select {
-		case t := <-ticker.C:
+		case <-ticker.C:
 			log.Println("punch liveness goroutine ")
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{}
