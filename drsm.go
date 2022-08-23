@@ -10,8 +10,13 @@ type DbInfo struct {
 }
 
 type PodId struct {
-	PodName string
-	PodIp   string
+	PodName string `bson:"podName,omitempty`
+	PodIp   string `bson:"podIp,omitempty`
+}
+
+type PodData struct {
+	PodId      string                 `bson:"podId,omitempty"`
+	Timestamp  time.Time              `bson:"time,omitempty"`
 }
 
 type ChunkState int

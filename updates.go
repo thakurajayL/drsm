@@ -2,7 +2,6 @@ package drsm
 
 import (
 	"context"
-	"fmt"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,12 +22,11 @@ func handleDbUpdates(d *Drsm) {
 	}
 	routineCtx, _ := context.WithCancel(context.Background())
 	//run routine to get messages from stream
-	go iterateChangeStream(d, routineCtx, updateStream)
-
+	iterateChangeStream(d, routineCtx, updateStream)
 }
 
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
-	log.Println("iterate change stream for timeout ", d)
+	log.Println("iterate change stream for podData ", d)
 
 	// case 1: Update Global Table in the Drsm with new chunk. There is possiblity of newPod added
 	// case 2: If podLivenessCheck results in Pod Down. Then inform Claim Thread.
@@ -63,10 +61,16 @@ func punchLiveness(d *Drsm) {
 	for {
 		select {
 		case t := <-ticker.C:
-			fmt.Println("Tick at", t)
+			log.Println("Tick at", t)
+			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
+			filter := bson.M{}
+			_, err := MongoDBLibrary.PutOneCustomDataStructure("podliveness", filter, pd)
+			if err != nil {
+				log.Println("put data failed : ", err)
+				return
+			}
 		}
 	}
-
 }
 
 func checkLiveness(d *Drsm) {
