@@ -39,4 +39,5 @@ type Drsm struct {
 	podMap         map[string]*PodHealth
 	newPod         chan string
 	podDown        chan string
+	scanChunk      chan int32
 }

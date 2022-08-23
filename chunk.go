@@ -34,6 +34,7 @@ func (c *Chunk) AllocateIntID() int32 {
 }
 
 func (c *Chunk) ReleaseIntID(id int32) {
-	var i int32 = id & 0x3ff
+	var i int32
+	i = id & 0x3ff
 	c.FreeIds = append(i, c.FreeIds)
 }

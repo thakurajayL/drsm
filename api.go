@@ -12,6 +12,8 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 	d.localChunkTbl = make(map[int32]*Chunk)
 	d.globalChunkTbl = make(map[int32]*Chunk)
 	d.newPod = make(chan string, 10)
+	d.podDown = make(chan string, 10)
+	d.scanChunk = make(chan int32, 10)
 
 	//connect to DB
 	MongoDBLibrary.SetMongoDB(db.Name, db.Url)
@@ -50,8 +52,8 @@ func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
 	i := id & 0x3ff
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
-		chunk, err := chunk.GetOwner()
-		return chunk, err
+		podId := chunk.GetOwner()
+		return podId.PodName, err
 	}
 	err := fmt.Errorf("Unknown Id")
 	return "", err

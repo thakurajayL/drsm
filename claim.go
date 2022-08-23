@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (d *Drsm) podDown() {
+func (d *Drsm) podDownDetected() {
 	for {
 		select {
 		case p := <-d.podDown:
@@ -13,7 +13,7 @@ func (d *Drsm) podDown() {
 			pd := d.podMap[p]
 			for k, v := range pd.podChunks {
 				c, found := d.globalChunkTbl[k]
-				fmt.Printf("Found : %v chunk : %v ", found, chunk)
+				fmt.Printf("Found : %v chunk : %v ", found, c)
 				go c.claimChunk()
 			}
 		}
