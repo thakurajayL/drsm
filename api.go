@@ -23,7 +23,7 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 }
 
 func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
-	for k, c := range d.localChunkTbl {
+	for _, c := range d.localChunkTbl {
 		if len(c.FreeIds) > 0 {
 			return c.AllocateIntID(), nil
 		}
@@ -49,7 +49,6 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
 
 func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
 	chunkId := id >> 10
-	i := id & 0x3ff
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
 		podId := chunk.GetOwner()

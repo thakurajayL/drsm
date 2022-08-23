@@ -11,7 +11,7 @@ func (d *Drsm) podDownDetected() {
 			fmt.Println("Pod Down detected ", p)
 			// Given Pod find out current Chunks owned by this POD
 			pd := d.podMap[p]
-			for k, v := range pd.podChunks {
+			for k, _ := range pd.podChunks {
 				c, found := d.globalChunkTbl[k]
 				fmt.Printf("Found : %v chunk : %v ", found, c)
 				go c.claimChunk(d)
