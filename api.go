@@ -34,11 +34,11 @@ func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
 	return c.AllocateIntID(), nil
 }
 
-func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) (error) {
+func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
 	chunkId := id >> 10
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
-		c.ReleaseIntID(id)
+		chunk.ReleaseIntID(id)
 		return nil
 	}
 	err := fmt.Errorf("Unknown Id")
@@ -50,7 +50,8 @@ func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
 	i := id & 0x3ff
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
-		return chunk.GetOwner()
+		chunk, err := chunk.GetOwner()
+		return chunk, err
 	}
 	err := fmt.Errorf("Unknown Id")
 	return "", err

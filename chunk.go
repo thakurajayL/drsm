@@ -18,13 +18,13 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	// We got to allocate new Chunk. We should select
 	// probable chunk number
 
-	id := 10
+	var id int32 = 10
 	c := &Chunk{Id: id}
 
 	d.localChunkTbl[id] = c
 
 	// add Ids to freeIds
-	return 0
+	return c, nil
 }
 
 func (c *Chunk) AllocateIntID() int32 {
@@ -34,6 +34,6 @@ func (c *Chunk) AllocateIntID() int32 {
 }
 
 func (c *Chunk) ReleaseIntID(id int32) {
-	i := id & 0x3ff
-	c.FreeIds = append(i, chunk.FreeIds)
+	var i int32 = id & 0x3ff
+	c.FreeIds = append(i, c.FreeIds)
 }
