@@ -9,7 +9,7 @@ type Chunk struct {
 }
 
 func (c *Chunk) GetOwner() PodId {
-	return c.Ownerd
+	return c.Owner
 
 }
 
