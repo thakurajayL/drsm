@@ -76,7 +76,7 @@ func checkLiveness(d *Drsm) {
 	ticker := time.NewTicker(5000 * time.Millisecond)
 	for {
 		select {
-		case _ := <-ticker.C:
+		case <-ticker.C:
 			for k, p := range d.podMap {
 				p.mu.Lock()
 				if p.prevCount == p.currentCount {
