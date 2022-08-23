@@ -61,7 +61,7 @@ func punchLiveness(d *Drsm) {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("punch liveness goroutine ")
+			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, pd)
@@ -69,6 +69,7 @@ func punchLiveness(d *Drsm) {
 				log.Println("put data failed : ", err)
 				return
 			}
+			log.Println("punch liveness goroutine complete")
 		}
 	}
 }
@@ -82,17 +83,17 @@ func checkLiveness(d *Drsm) {
 		select {
 		case <-ticker.C:
 			log.Println("check liveness goroutine ")
-/*
-			for k, p := range d.podMap {
-				p.mu.Lock()
-				if p.PrevTimestamp.after(p.== p.currentCount {
-					d.podDown <- k // let claim thread work chunks assigned by this Pod.
-				} else {
-					p.prevCount = p.currentCount
+			/*
+				for k, p := range d.podMap {
+					p.mu.Lock()
+					if p.PrevTimestamp.after(p.== p.currentCount {
+						d.podDown <- k // let claim thread work chunks assigned by this Pod.
+					} else {
+						p.prevCount = p.currentCount
+					}
+					p.mu.Unlock()
 				}
-				p.mu.Unlock()
-			}
-*/
+			*/
 		}
 	}
 }
