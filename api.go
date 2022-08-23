@@ -53,7 +53,7 @@ func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
 		podId := chunk.GetOwner()
-		return podId.PodName, err
+		return podId.PodName, nil
 	}
 	err := fmt.Errorf("Unknown Id")
 	return "", err

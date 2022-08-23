@@ -23,10 +23,11 @@ const (
 	Orphan
 )
 
-type PodHealth struct {
+type PodData struct {
 	mu           sync.Mutex
 	prevCount    int32
 	currentCount int32
+	podChunks    map[int32]Chunk
 }
 
 type Drsm struct {
@@ -36,7 +37,7 @@ type Drsm struct {
 	db             DbInfo
 	localChunkTbl  map[int32]*Chunk
 	globalChunkTbl map[int32]*Chunk
-	podMap         map[string]*PodHealth
+	podMap         map[string]*PodData
 	newPod         chan string
 	podDown        chan string
 	scanChunk      chan int32

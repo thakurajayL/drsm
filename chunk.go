@@ -8,8 +8,8 @@ type Chunk struct {
 	AllocIds map[int32]bool
 }
 
-func (c *Chunk) GetOwner() {
-	return c.Owner
+func (c *Chunk) GetOwner() PodId {
+	return c.Ownerd
 
 }
 
@@ -36,5 +36,5 @@ func (c *Chunk) AllocateIntID() int32 {
 func (c *Chunk) ReleaseIntID(id int32) {
 	var i int32
 	i = id & 0x3ff
-	c.FreeIds = append(i, c.FreeIds)
+	c.FreeIds = append(c.FreeIds, i)
 }

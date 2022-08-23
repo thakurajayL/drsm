@@ -14,7 +14,7 @@ func (d *Drsm) podDownDetected() {
 			for k, v := range pd.podChunks {
 				c, found := d.globalChunkTbl[k]
 				fmt.Printf("Found : %v chunk : %v ", found, c)
-				go c.claimChunk()
+				go c.claimChunk(d)
 			}
 		}
 	}
