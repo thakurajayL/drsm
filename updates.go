@@ -61,7 +61,7 @@ func punchLiveness(d *Drsm) {
 	for {
 		select {
 		case t := <-ticker.C:
-			log.Println("Tick at", t)
+			log.Println("punch liveness goroutine ")
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, pd)
@@ -77,19 +77,22 @@ func checkLiveness(d *Drsm) {
 	// go through all pods to see if any pod is showing same old counter
 	// Mark it down locally
 	// Claiming the chunks can be reactive
-	ticker := time.NewTicker(5000 * time.Millisecond)
+	ticker := time.NewTicker(15000 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
+			log.Println("check liveness goroutine ")
+/*
 			for k, p := range d.podMap {
 				p.mu.Lock()
-				if p.prevCount == p.currentCount {
+				if p.PrevTimestamp.after(p.== p.currentCount {
 					d.podDown <- k // let claim thread work chunks assigned by this Pod.
 				} else {
 					p.prevCount = p.currentCount
 				}
 				p.mu.Unlock()
 			}
+*/
 		}
 	}
 }

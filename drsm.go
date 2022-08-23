@@ -2,6 +2,7 @@ package drsm
 
 import (
 	"sync"
+    "time"
 )
 
 type DbInfo struct {
@@ -17,6 +18,9 @@ type PodId struct {
 type PodData struct {
 	PodId      string                 `bson:"podId,omitempty"`
 	Timestamp  time.Time              `bson:"time,omitempty"`
+	PrevTimestamp  time.Time          `bson:"-"`
+	podChunks  map[int32]Chunki       `bson:"-"`
+	mu         sync.Mutex             `bsin:"-"`
 }
 
 type ChunkState int
@@ -27,13 +31,6 @@ const (
 	PeerOwned
 	Orphan
 )
-
-type PodData struct {
-	mu           sync.Mutex
-	prevCount    int32
-	currentCount int32
-	podChunks    map[int32]Chunk
-}
 
 type Drsm struct {
 	mu             sync.Mutex
