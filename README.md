@@ -1,2 +1,2 @@
 # drsm
-Distributed Resource sharing
+Distributed Resource sharing go module
