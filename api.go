@@ -3,7 +3,6 @@ package drsm
 import (
 	"fmt"
 	"github.com/omec-project/MongoDBLibrary"
-	"sync"
 )
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
@@ -21,7 +20,7 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 	return d, nil
 }
 
-func (d *Drsm) AllocateIntID(sharedPoolName string) (id int, err error) {
+func (d *Drsm) AllocateIntID(sharedPoolName string) (int, error) {
 	for k, c := range d.localChunkTbl {
 		if len(c.FreeIds) > 0 {
 			return c.AllocateIntID()
@@ -35,7 +34,7 @@ func (d *Drsm) AllocateIntID(sharedPoolName string) (id int, err error) {
 	return c.AllocateIntID(), nil
 }
 
-func (d *Drsm) ReleaseIntID(sharedPoolName string, id int) (err error) {
+func (d *Drsm) ReleaseIntID(sharedPoolName string, id int) (error) {
 	chunkId := id >> 10
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
@@ -46,7 +45,7 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int) (err error) {
 	return err
 }
 
-func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int) (owner string, err error) {
+func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int) (string, error) {
 	chunkId := id >> 10
 	i := id & 0x3ff
 	chunk, found := d.localChunkTbl[chunkId]

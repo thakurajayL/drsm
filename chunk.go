@@ -1,10 +1,10 @@
 package drsm
 
 type Chunk struct {
-	Id       Int32
+	Id       int32
 	Owner    PodId
 	State    ChunkState
-	FreeIds  []Int32
+	FreeIds  []int32
 	AllocIds map[int32]bool
 }
 

@@ -21,8 +21,8 @@ const (
 
 type PodHealth struct {
 	mu           sync.Mutex
-	prevCount    Int32
-	currentCount Int32
+	prevCount    int32
+	currentCount int32
 }
 
 type Drsm struct {
@@ -30,7 +30,7 @@ type Drsm struct {
 	sharedPoolName string
 	clientId       PodId
 	db             DbInfo
-	localChunkTbl  map[Int32]*Chunk
-	globalChunkTbl map[Int32]*Chunk
+	localChunkTbl  map[int32]*Chunk
+	globalChunkTbl map[int32]*Chunk
 	podMap         map[string]*PodHealth
 }
