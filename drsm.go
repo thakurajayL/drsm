@@ -1,5 +1,9 @@
 package drsm
 
+import (
+	"sync"
+)
+
 type DbInfo struct {
 	Url  string
 	Name string
@@ -33,4 +37,5 @@ type Drsm struct {
 	localChunkTbl  map[int32]*Chunk
 	globalChunkTbl map[int32]*Chunk
 	podMap         map[string]*PodHealth
+	newPod         chan string
 }

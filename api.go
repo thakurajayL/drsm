@@ -9,8 +9,8 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 	d := &Drsm{sharedPoolName: sharedPoolName,
 		clientId: myid,
 		db:       db}
-	d.localChunkTbl = make(map[int]*Chunk)
-	d.globalChunkTbl = make(map[int]*Chunk)
+	d.localChunkTbl = make(map[int32]*Chunk)
+	d.globalChunkTbl = make(map[int32]*Chunk)
 	d.newPod = make(chan string, 10)
 
 	//connect to DB
@@ -20,21 +20,21 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 	return d, nil
 }
 
-func (d *Drsm) AllocateIntID(sharedPoolName string) (int, error) {
+func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
 	for k, c := range d.localChunkTbl {
 		if len(c.FreeIds) > 0 {
-			return c.AllocateIntID()
+			return c.AllocateIntID(), nil
 		}
 	}
 	c, err := GetNewChunk(d)
-	if err {
+	if err != nil {
 		err := fmt.Errorf("Ids not available")
 		return 0, err
 	}
 	return c.AllocateIntID(), nil
 }
 
-func (d *Drsm) ReleaseIntID(sharedPoolName string, id int) (error) {
+func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) (error) {
 	chunkId := id >> 10
 	chunk, found := d.localChunkTbl[chunkId]
 	if found == true {
@@ -45,7 +45,7 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int) (error) {
 	return err
 }
 
-func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int) (string, error) {
+func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
 	chunkId := id >> 10
 	i := id & 0x3ff
 	chunk, found := d.localChunkTbl[chunkId]

@@ -33,7 +33,7 @@ func (c *Chunk) AllocateIntID() int32 {
 	return (c.Id << 10) | id
 }
 
-func (c *Chunk) ReleaseIntID(int id) {
+func (c *Chunk) ReleaseIntID(id int32) {
 	i := id & 0x3ff
 	c.FreeIds = append(i, chunk.FreeIds)
 }

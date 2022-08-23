@@ -20,7 +20,7 @@ func (d *Drsm) podDown() {
 	}
 }
 
-func (c *chunk) claimChunk(d *Drsm) {
+func (c *Chunk) claimChunk(d *Drsm) {
 	// try to claim. If success then notification will update owner.
 	claimSuccess := true
 	if claimSuccess == true {
