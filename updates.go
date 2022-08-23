@@ -5,7 +5,7 @@ import (
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
 )
@@ -63,7 +63,7 @@ func punchLiveness(d *Drsm) {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
-			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
+			pd := PodData{Id: "punchLiveness", PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{"_id": "punchLiveness"}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, pd)
 			if err != nil {

@@ -16,6 +16,7 @@ type PodId struct {
 }
 
 type PodData struct {
+	Id            string          `bson:"_id,omitempty"`
 	PodId         PodId           `bson:"podId,omitempty"`
 	Timestamp     time.Time       `bson:"time,omitempty"`
 	PrevTimestamp time.Time       `bson:"-"`
