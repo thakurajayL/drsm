@@ -17,15 +17,7 @@ func handleDbUpdates(d *Drsm) {
 	database := MongoDBLibrary.Client.Database(d.db.Name)
 	collection := database.Collection(d.sharedPoolName)
 
-    pipeline := mongo.Pipeline{
-    bson.D{
-            {"$match", bson.D{{"$or",
-            	bson.A{
-            		bson.D{{"type", "keepalive"}}
-            		}}},
-            }
-        }
-    }
+    pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
 
 
 	//create stream to monitor actions on the collection
