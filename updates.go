@@ -27,6 +27,20 @@ func handleDbUpdates(d *Drsm) {
 	iterateChangeStream(d, routineCtx, updateStream)
 }
 
+/*
+2022/08/24 06:13:58 iterate stream :  map[
+                                          _id:map[_data:826305C1A6000000012B022C0100296E5A1004E3379675DE7341FD9485EAD3567681A4463C5F6964003C70756E63684C6976656E657373000004] 
+                                           clusterTime:{1661321638 1} 
+                                           documentKey:map[_id:punchLiveness] 
+                                           fullDocument:map[_id:punchLiveness dbtestapp-7b9c99fcd9-rbw5j:map[podId:dbtestapp-7b9c99fcd9-rbw5j time:1661321638] dbtestapp-7b9c99fcd9-zg98m:map[podId:dbtestapp-7b9c99fcd9-zg98m time:1661321523]] 
+                                           ns:map[coll:ngapid db:sdcore] 
+                                           operationType:update 
+                                           updateDescription:map[
+                                                    removedFields:[] 
+                                                    updatedFields:map[dbtestapp-7b9c99fcd9-rbw5j:map[podId:dbtestapp-7b9c99fcd9-rbw5j time:1661321638]]
+                                            ]
+                                        ]
+*/
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
 	log.Println("iterate change stream for podData ", d)
 
@@ -45,6 +59,14 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If new Pod detected then send it on channel.. d->newPod
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
+        for k,v := range data {
+		    log.Println("k : ", v)
+            if k == "updateDescription" {
+                for k1, v1 := v {
+		            log.Println("k1 : ", v1)
+                }
+            }
+        }
 	}
 }
 
