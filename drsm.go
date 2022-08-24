@@ -25,7 +25,7 @@ type PodData struct {
 
 type PodHealth struct {
 	Id      string  `bson:"_id,omitempty"`
-	podData PodData `bson:"podData",omitempty`
+	podData PodData `bson:"podData,omitempty"`
 }
 
 type ChunkState int
