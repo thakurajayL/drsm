@@ -17,7 +17,8 @@ func handleDbUpdates(d *Drsm) {
 	database := MongoDBLibrary.Client.Database(d.db.Name)
 	collection := database.Collection(d.sharedPoolName)
 
-    pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
+    //pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
+    pipeline := mongo.Pipeline{} //bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
 
 
 	//create stream to monitor actions on the collection
@@ -68,9 +69,6 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		for k := range data {
 			log.Println("k,v : ", k, data[k])
 			log.Println("key matched k,v : ", k, data[k])
-			//			for k1 := range data[k] {
-			//				log.Println("k1 : ", k1)
-			//			}
 		}
 	}
 }
