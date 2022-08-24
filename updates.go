@@ -71,8 +71,9 @@ func punchLiveness(d *Drsm) {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
-			update := bson.M{{"$set", bson.M{d.clientId.PodName, pd}}}
 			filter := bson.M{"_id": "punchLiveness"}
+			b := json.Marshal(pd)
+			update := bson.D{"$set", {d.clientId.PodName, b}}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)

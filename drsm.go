@@ -11,21 +11,21 @@ type DbInfo struct {
 }
 
 type PodId struct {
-	PodName string `bson:"podName,omitempty`
-	PodIp   string `bson:"podIp,omitempty`
+	PodName string `bson:"podName,omitempty" json:"podName,omitempty"`
+	PodIp   string `bson:"podIp,omitempty" json:"podIp,omitempty"`
 }
 
 type PodData struct {
-	PodId         PodId           `bson:"podId,omitempty"`
-	Timestamp     time.Time       `bson:"time,omitempty"`
-	PrevTimestamp time.Time       `bson:"-"`
-	podChunks     map[int32]Chunk `bson:"-"`
-	mu            sync.Mutex      `bsin:"-"`
+	PodId         PodId           `bson:"podId,omitempty" json:"podId,omitempty"`
+	Timestamp     time.Time       `bson:"time,omitempty" json:"time,omitempty"`
+	PrevTimestamp time.Time       `bson:"-" json:"-"`
+	podChunks     map[int32]Chunk `bson:"-" json:"-"`
+	mu            sync.Mutex      `bsin:"-" json:"-"`
 }
 
 type PodHealth struct {
-	Id      string  `bson:"_id,omitempty"`
-	podData PodData `bson:"podData,omitempty"`
+	Id      string  `bson:"_id,omitempty" json:"_id,omitempty"`
+	podData PodData `bson:"podData,omitempty" json:"podData,omitempty"`
 }
 
 type ChunkState int
