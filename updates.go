@@ -2,6 +2,7 @@ package drsm
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -73,7 +74,7 @@ func punchLiveness(d *Drsm) {
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{"_id": "punchLiveness"}
 			b := json.Marshal(pd)
-			update := bson.D{"$set", {d.clientId.PodName, b}}
+			update := bson.M{d.clientId.PodName, b}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)
