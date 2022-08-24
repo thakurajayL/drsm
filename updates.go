@@ -59,14 +59,21 @@ func startDiscovery(d *Drsm) {
 func punchLiveness(d *Drsm) {
 	// write to DB - signature every 2 second
 	ticker := time.NewTicker(2000 * time.Millisecond)
+	ph := PodHealth{Id: "punchLiveness", podData: pd}
+	filter := bson.M{"_id": "punchLiveness"}
+	_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, ph)
+	if err != nil {
+		log.Println("put data failed : ", err)
+		return
+	}
 	for {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
-			ph := PodHealth{Id: "punchLiveness", podData: pd}
+			update := bson.D{{"$set", bson.D{d.clientd.PodName, bson.D{pd}}}}
 			filter := bson.M{"_id": "punchLiveness"}
-			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, ph)
+			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)
 				return
