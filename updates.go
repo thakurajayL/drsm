@@ -18,7 +18,7 @@ func handleDbUpdates(d *Drsm) {
 	collection := database.Collection(d.sharedPoolName)
 
 	//create stream to monitor actions on the collection
-	updateStream, err := collection.Watch(context.TODO(), mongo.Pipeline{bson.D{{"$match",bson.M{{"type", "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
+	updateStream, err := collection.Watch(context.TODO(), mongo.Pipeline{bson.D{{"$match",bson.M{{"type": "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 
 /*
 pipeline := mongo.Pipeline{
