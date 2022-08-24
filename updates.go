@@ -63,9 +63,9 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 			log.Println("k,v : ", k, v)
 			if k == "updateDescription" {
 			    log.Println("key matched k,v : ", k, v)
-				//for k1, v1 := range v {
-				//	log.Println("k1 : ", v1)
-				//}
+				for k1, v1 := range data[k] {
+					log.Println("k1,v1 : ", k1, v1)
+				}
 			}
 		}
 	}
