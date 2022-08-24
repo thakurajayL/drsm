@@ -59,13 +59,11 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If new Pod detected then send it on channel.. d->newPod
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
-		for k, v := range data {
+		for k := range data {
 			log.Println("k,v : ", k, v)
-			if k == "updateDescription" {
-			    log.Println("key matched k,v : ", k, v)
-				for k1 := range data[k] {
-					log.Println("k1 : ", k1)
-				}
+			log.Println("key matched k,v : ", k, data[k])
+			for k1 := range data[k] {
+				log.Println("k1 : ", k1)
 			}
 		}
 	}
