@@ -60,11 +60,11 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
 		for k := range data {
-			log.Println("k,v : ", k, v)
+			log.Println("k,v : ", k, data[k])
 			log.Println("key matched k,v : ", k, data[k])
-			for k1 := range data[k] {
-				log.Println("k1 : ", k1)
-			}
+//			for k1 := range data[k] {
+//				log.Println("k1 : ", k1)
+//			}
 		}
 	}
 }
@@ -81,24 +81,17 @@ func startDiscovery(d *Drsm) {
 func punchLiveness(d *Drsm) {
 	// write to DB - signature every 2 second
 	ticker := time.NewTicker(2000 * time.Millisecond)
-	ph := PodHealth{Id: "punchLiveness"}
-	filter := bson.M{"_id": "punchLiveness"}
-	_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, ph)
-	if err != nil {
-		log.Println("put data failed : ", err)
-		return
-	}
 	for {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			//pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
-			filter := bson.M{"_id": "punchLiveness"}
+			filter := bson.M{}
 			//b,_ := json.Marshal(pd)
 			//update := bson.D{{d.clientId.PodName, b}}
 			now := time.Now()
 			t := now.Unix()
-			update := bson.D{{d.clientId.PodName, bson.D{{"podId", d.clientId.PodName}, {"time", t}}}}
+			update := bson.D{{"podId", d.clientId.PodName}, {"time", t}}
 
 			_, err = MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
