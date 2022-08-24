@@ -74,7 +74,7 @@ func punchLiveness(d *Drsm) {
 			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{"_id": "punchLiveness"}
 			b,_ := json.Marshal(pd)
-			update := bson.M{d.clientId.PodName, b}
+			update := bson.D{{d.clientId.PodName, b}}
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)
