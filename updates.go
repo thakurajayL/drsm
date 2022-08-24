@@ -88,7 +88,7 @@ func punchLiveness(d *Drsm) {
 			filter := bson.M{"_id": d.clientId.PodName}
 			now := time.Now()
 			t := now.Unix()
-			update := bson.D{{"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}}
+			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
