@@ -2,7 +2,7 @@ package drsm
 
 import (
 	"context"
-	"encoding/json"
+	//"encoding/json"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -71,11 +71,11 @@ func punchLiveness(d *Drsm) {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
-			pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
+			//pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
 			filter := bson.M{"_id": "punchLiveness"}
 			//b,_ := json.Marshal(pd)
 			//update := bson.D{{d.clientId.PodName, b}}
-			update := bson.D{{d.clientId.PodName, bson.Marshal(pd)}}
+			update := bson.D{{d.clientId.PodName, bson.D("podId": d.clientId, "time": time.Now())}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
