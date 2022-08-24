@@ -81,14 +81,26 @@ func startDiscovery(d *Drsm) {
 func punchLiveness(d *Drsm) {
 	// write to DB - signature every 2 second
 	ticker := time.NewTicker(2000 * time.Millisecond)
+	log.Println("NfProfile document expiry enabled")
+
+	ret := MongoDBLibrary.RestfulAPICreateTTLIndex(d.sharedPoolName, 0, "expireAt")
+	if ret {
+		log.Println("TTL Index created for Field : expireAt in Collection : NfProfile")
+	} else {
+		log.Println("TTL Index exists for Field : expireAt in Collection : NfProfile")
+	}
+
 	for {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			filter := bson.M{"_id": d.clientId.PodName}
 			now := time.Now()
+
+			timein := time.Now().Local().Add(time.Second * 20)
 			t := now.Unix()
-			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}}
+
+			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}, {"expireAt", timein}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
