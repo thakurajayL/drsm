@@ -6,7 +6,7 @@ import (
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	//"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
 )
@@ -18,7 +18,7 @@ func handleDbUpdates(d *Drsm) {
 	collection := database.Collection(d.sharedPoolName)
 
 	//create stream to monitor actions on the collection
-	updateStream, err := collection.Watch(context.TODO(), mongo.Pipeline{}, options.ChangeStream().SetFullDocument(options.UpdateLookup))
+	updateStream, err := collection.Watch(context.TODO(), mongo.Pipeline{}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 	if err != nil {
 		panic(err)
 	}
