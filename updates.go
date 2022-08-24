@@ -93,7 +93,7 @@ func punchLiveness(d *Drsm) {
 			t := now.Unix()
 			update := bson.D{{"type", "keepalive"},{"podId", d.clientId.PodName}, {"time", t}}
 
-			_, err = MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
+			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)
 				return
