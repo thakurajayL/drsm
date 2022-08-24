@@ -62,9 +62,9 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		for k := range data {
 			log.Println("k,v : ", k, data[k])
 			log.Println("key matched k,v : ", k, data[k])
-//			for k1 := range data[k] {
-//				log.Println("k1 : ", k1)
-//			}
+			//			for k1 := range data[k] {
+			//				log.Println("k1 : ", k1)
+			//			}
 		}
 	}
 }
@@ -85,13 +85,10 @@ func punchLiveness(d *Drsm) {
 		select {
 		case <-ticker.C:
 			log.Println("punch liveness goroutine ", d.sharedPoolName)
-			//pd := PodData{PodId: d.clientId, Timestamp: time.Now()}
-			filter := bson.M{}
-			//b,_ := json.Marshal(pd)
-			//update := bson.D{{d.clientId.PodName, b}}
+			filter := bson.M{"_id": d.clientId.PodName}
 			now := time.Now()
 			t := now.Unix()
-			update := bson.D{{"type", "keepalive"},{"podId", d.clientId.PodName}, {"time", t}}
+			update := bson.D{{"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
