@@ -39,12 +39,12 @@ type UpdatedFields struct {
 }
 
 type UpdatedDesc struct {
-	UpdFields UpdatedFields `bson:updatedFields,omitempty"`
+	UpdFields UpdatedFields `bson:"updatedFields,omitempty"`
 }
 
 type FullStream struct {
 	Id        string    `bson:"_id,omitempty"`
-	PodId     string    `bson:"podId,omitempty`
+	PodId     string    `bson:"podId,omitempty"`
 	Timestamp time.Time `bson:"time,omitempty"`
 	ExpireAt  time.Time `bson:"time,omitempty"`
 	Type      string    `bson:"type,omitempty"`
@@ -85,7 +85,8 @@ map[
         clusterTime:{1661403621 1}
         documentKey:map[_id:dbtestapp-8b9f488f7-nd2tp]
         ns:map[coll:ngapid db:sdcore]
-        operationType:delete]
+        operationType:delete
+   ]
 
 */
 
