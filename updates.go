@@ -17,14 +17,13 @@ func handleDbUpdates(d *Drsm) {
 	database := MongoDBLibrary.Client.Database(d.db.Name)
 	collection := database.Collection(d.sharedPoolName)
 
-    //pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
-    pipeline := mongo.Pipeline{} //bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
-
+	// TODO : 2 go routines to monitor 2 pipelines
+	pipeline := mongo.Pipeline{} //bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
+	//pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
+	//pipeline := /mongo.Pipeline{bson.D{{"$match",bson.M{{"type": "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 
 	//create stream to monitor actions on the collection
 	updateStream, err := collection.Watch(context.TODO(), pipeline)
-
-//mongo.Pipeline{bson.D{{"$match",bson.M{{"type": "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 
 	if err != nil {
 		panic(err)
@@ -35,19 +34,14 @@ func handleDbUpdates(d *Drsm) {
 }
 
 /*
-2022/08/24 06:13:58 iterate stream :  map[
-                                          _id:map[_data:826305C1A6000000012B022C0100296E5A1004E3379675DE7341FD9485EAD3567681A4463C5F6964003C70756E63684C6976656E657373000004]
-                                           clusterTime:{1661321638 1}
-                                           documentKey:map[_id:punchLiveness]
-                                           fullDocument:map[_id:punchLiveness dbtestapp-7b9c99fcd9-rbw5j:map[podId:dbtestapp-7b9c99fcd9-rbw5j time:1661321638] dbtestapp-7b9c99fcd9-zg98m:map[podId:dbtestapp-7b9c99fcd9-zg98m time:1661321523]]
-                                           ns:map[coll:ngapid db:sdcore]
-                                           operationType:update
-                                           updateDescription:map[
-                                                    removedFields:[]
-                                                    updatedFields:map[dbtestapp-7b9c99fcd9-rbw5j:map[podId:dbtestapp-7b9c99fcd9-rbw5j time:1661321638]]
-                                            ]
-                                        ]
+type  xyz struct {
+	Id      string  `bson:"_id,omitempty" json:"_id,omitempty"`
+    PodId   string  `bson:"podId,omitempty`
+	Timestamp     time.Time       `bson:"time,omitempty"`
+    Type          string `bson:"type",omitempty"`
+}
 */
+
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
 	log.Println("iterate change stream for podData ", d)
 
@@ -68,7 +62,14 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		log.Println("iterate stream : ", data)
 		for k := range data {
 			log.Println("k,v : ", k, data[k])
-			log.Println("key matched k,v : ", k, data[k])
+			if key == "operationType" && v == "insert" {
+				//full := data["fullDocument"]
+				//var f interface{}
+				//json.Unmarshal(full, &f)
+				mymap := full.(map[string]interface{})
+				log.Println("mymap : ", mymap)
+				// _id:dbtestapp-bb4c4cdb4-jhzlz expireAt:1661399064504 podId:dbtestapp-bb4c4cdb4-jhzlz time:1661399044 type:keepalive
+			}
 		}
 	}
 }
@@ -84,14 +85,14 @@ func startDiscovery(d *Drsm) {
 
 func punchLiveness(d *Drsm) {
 	// write to DB - signature every 2 second
-	ticker := time.NewTicker(2000 * time.Millisecond)
-	log.Println("NfProfile document expiry enabled")
+	ticker := time.NewTicker(20000 * time.Millisecond)
 
+	log.Println(" document expiry enabled")
 	ret := MongoDBLibrary.RestfulAPICreateTTLIndex(d.sharedPoolName, 0, "expireAt")
 	if ret {
-		log.Println("TTL Index created for Field : expireAt in Collection : NfProfile")
+		log.Println("TTL Index created for Field : expireAt in Collection")
 	} else {
-		log.Println("TTL Index exists for Field : expireAt in Collection : NfProfile")
+		log.Println("TTL Index exists for Field : expireAt in Collection")
 	}
 
 	for {
