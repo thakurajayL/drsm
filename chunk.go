@@ -29,17 +29,15 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	log.Println("Allocate new chunk ")
 	// 14 bits --- 1,2,4,8,16
 	var cn int32 = 1
-	/*
-		for {
-			cn = rand.Int32(16000)
-			_, found := d.globalChunkTbl[cn]
-			if found == true {
-				continue
-			}
-			log.Println("Found chunk Id block ", cn)
-			break
+	for {
+		cn = rand.Int32(16000)
+		_, found := d.globalChunkTbl[cn]
+		if found == true {
+			continue
 		}
-	*/
+		log.Println("Found chunk Id block ", cn)
+		break
+	}
 	// Let's confirm if this gets updated in DB
 	docId := fmt.Sprintf("chunkid-%d", cn)
 	filter := bson.M{"_id": docId}
@@ -53,8 +51,8 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 
 	log.Printf("Adding chunk %v success ", cn)
 	c := &Chunk{Id: cn}
-    var i int32
-	for i =0 ; i <1000; i++ {
+	var i int32
+	for i = 0; i < 1000; i++ {
 		c.FreeIds = append(c.FreeIds, i)
 	}
 
