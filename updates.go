@@ -11,34 +11,8 @@ import (
 	"time"
 )
 
-// handle incoming db notification and update
-
-func handleDbUpdates(d *Drsm) {
-	database := MongoDBLibrary.Client.Database(d.db.Name)
-	collection := database.Collection(d.sharedPoolName)
-
-	// TODO : 2 go routines to monitor 2 pipelines
-	pipeline := mongo.Pipeline{} //bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
-	//pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
-	//pipeline := /mongo.Pipeline{bson.D{{"$match",bson.M{{"type": "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
-
-	for {
-		//create stream to monitor actions on the collection
-		updateStream, err := collection.Watch(context.TODO(), pipeline)
-
-		if err != nil {
-			time.Sleep(5000 * time.Millisecond)
-			continue
-		}
-		routineCtx, _ := context.WithCancel(context.Background())
-		//run routine to get messages from stream
-		iterateChangeStream(d, routineCtx, updateStream)
-	}
-}
-
 type UpdatedFields struct {
-	Timestamp time.Time `bson:"time,omitempty"`
-	ExpireAt  time.Time `bson:"expireAt,omitempty"`
+	ExpireAt time.Time `bson:"expireAt,omitempty"`
 }
 
 type UpdatedDesc struct {
@@ -46,11 +20,10 @@ type UpdatedDesc struct {
 }
 
 type FullStream struct {
-	Id        string    `bson:"_id,omitempty"`
-	PodId     string    `bson:"podId,omitempty"`
-	Timestamp time.Time `bson:"time,omitempty"`
-	ExpireAt  time.Time `bson:"expireAt,omitempty"`
-	Type      string    `bson:"type,omitempty"`
+	Id       string    `bson:"_id,omitempty"`
+	PodId    string    `bson:"podId,omitempty"`
+	ExpireAt time.Time `bson:"expireAt,omitempty"`
+	Type     string    `bson:"type,omitempty"`
 }
 
 type DocKey struct {
@@ -91,16 +64,47 @@ map[
         operationType:delete
    ]
 
+map[
+        _id:map[_data:826307FF400000000B2B022C0100296E5A1004020E4568089B4D8889A42D53E225B5AE463C5F6964003C6368756E6B69642D3131353638000004]
+        clusterTime:{1661468480 11}
+        documentKey:map[_id:chunkid-11568]
+        fullDocument:map[_id:chunkid-11568 podId:dbtestapp-8644b5b7d6-qdk54 type:chunk]
+        ns:map[coll:ngapid db:sdcore]
+        operationType:insert]
+
 */
+
+// handle incoming db notification and update
+func handleDbUpdates(d *Drsm) {
+	database := MongoDBLibrary.Client.Database(d.db.Name)
+	collection := database.Collection(d.sharedPoolName)
+
+	// TODO : 2 go routines to monitor 2 pipelines
+	pipeline := mongo.Pipeline{}
+
+	for {
+		//create stream to monitor actions on the collection
+		updateStream, err := collection.Watch(context.TODO(), pipeline)
+
+		if err != nil {
+			time.Sleep(5000 * time.Millisecond)
+			continue
+		}
+		routineCtx, _ := context.WithCancel(context.Background())
+		//run routine to get messages from stream
+		iterateChangeStream(d, routineCtx, updateStream)
+	}
+}
 
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
 	log.Println("iterate change stream for podData ", d)
 
+	// step 1: update all other clients database
 	// case 1: Update Global Table in the Drsm with new chunk. There is possiblity of newPod added
 	// case 2: If podLivenessCheck results in Pod Down. Then inform Claim Thread.
 	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
 	// case 3: Update Global Table in the Drsm, existing chunk new owner = ORPHAN
-	// 	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
+	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
 
 	defer stream.Close(routineCtx)
 	for stream.Next(routineCtx) {
@@ -115,6 +119,37 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
 		log.Printf("decoded stream bson %+v ", s)
+		switch operationType {
+		case "insert":
+			log.Println("insert operations")
+			full = &data.Full
+			switch full.Type {
+			case "keepalive":
+				log.Println("insert keepalive document")
+				pod, found := d.podMap[full.PodId]
+				if found == false {
+					pod := &PodData{PodId: full.PodId}
+					d.podMap[full.PodId] = pod
+					log.Println("d.podMaps ", d.podMap[full.PodId])
+				}
+			case "chunk":
+				log.Println("insert chunk document")
+				pod, found := d.podMap[full.PodId]
+				if found == true {
+					id := full.Id
+					log.Println("chunk document id ", id)
+					z := strings.Split(id, "-")
+					log.Println("extracted chunk id ", z[1])
+					cid, err := strconv.ParseInt(z[1], 10, 32)
+					pod.podChunks[cid] = &Chunk{Id: cid, Owner: full.PodI}
+					log.Println("pod.podChunks ", pod.podChunks)
+				}
+			}
+		case "update":
+			log.Println("update operations")
+		case "delete":
+			log.Println("delete operations")
+		}
 	}
 }
 
@@ -143,12 +178,10 @@ func punchLiveness(d *Drsm) {
 		select {
 		case <-ticker.C:
 			filter := bson.M{"_id": d.clientId.PodName}
-			now := time.Now()
 
 			timein := time.Now().Local().Add(time.Second * 20)
-			t := now.Unix()
 
-			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"time", t}, {"expireAt", timein}}
+			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"expireAt", timein}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
@@ -167,7 +200,6 @@ func checkLiveness(d *Drsm) {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("check liveness goroutine ")
 			/*
 				for k, p := range d.podMap {
 					p.mu.Lock()
