@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/omec-project/MongoDBLibrary"
 	"log"
-	"rand"
+	"math/rand"
 	"time"
 )
 
