@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	//"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -119,7 +121,7 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
 		log.Printf("decoded stream bson %+v ", s)
-		switch s.operationType {
+		switch s.OpType {
 		case "insert":
 			log.Println("insert operations")
 			full := &s.Full
@@ -128,7 +130,8 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 				log.Println("insert keepalive document")
 				pod, found := d.podMap[full.PodId]
 				if found == false {
-					pod := &PodData{PodId: full.PodId}
+					podI := PodId{PodName: full.PodId}
+					pod := &PodData{PodId: podI}
 					d.podMap[full.PodId] = pod
 					log.Println("d.podMaps ", d.podMap[full.PodId])
 				}
@@ -141,7 +144,7 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 					z := strings.Split(id, "-")
 					log.Println("extracted chunk id ", z[1])
 					cid, err := strconv.ParseInt(z[1], 10, 32)
-					pod.podChunks[cid] = &Chunk{Id: cid, Owner: full.PodI}
+					pod.podChunks[cid] = &Chunk{Id: cid, Owner: full.PodId}
 					log.Println("pod.podChunks ", pod.podChunks)
 				}
 			}
