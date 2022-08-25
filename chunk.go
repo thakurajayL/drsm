@@ -30,23 +30,25 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	// 14 bits --- 1,2,4,8,16
 	var cn int32 = 1
 	for {
-		cn = rand.Int31n(16000)
-		_, found := d.globalChunkTbl[cn]
-		if found == true {
+		for {
+			cn = rand.Int31n(16000)
+			_, found := d.globalChunkTbl[cn]
+			if found == true {
+				continue
+			}
+			log.Println("Found chunk Id block ", cn)
+			break
+		}
+		// Let's confirm if this gets updated in DB
+		docId := fmt.Sprintf("chunkid-%d", cn)
+		filter := bson.M{"_id": docId}
+		update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName}
+		inserted := MongoDBLibrary.RestfulAPIPostOnly(d.sharedPoolName, filter, update)
+		if inserted != true {
+			log.Printf("Adding chunk %v failed. Retry again ", cn)
 			continue
 		}
-		log.Println("Found chunk Id block ", cn)
 		break
-	}
-	// Let's confirm if this gets updated in DB
-	docId := fmt.Sprintf("chunkid-%d", cn)
-	filter := bson.M{"_id": docId}
-	update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName}
-	inserted := MongoDBLibrary.RestfulAPIPostOnly(d.sharedPoolName, filter, update)
-	if inserted != true {
-		log.Printf("Adding chunk %v failed ", cn)
-		err := fmt.Errorf("Ids not available")
-		return nil, err
 	}
 
 	log.Printf("Adding chunk %v success ", cn)
