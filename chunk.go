@@ -46,14 +46,14 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	update := bson.M{"_id": docId, "type": "chunk","podId": d.clientId.PodName}
 	inserted := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
 	if inserted != true {
-		log.Println("put data failed : ", err)
+		log.Printf("Adding chunk %v failed ",cn)
 		err := fmt.Errorf("Ids not available")
-		return 0, err
+		return nil, err
 	}
 
 	c := &Chunk{Id: cn}
 
-	d.localChunkTbl[id] = c
+	d.localChunkTbl[cn] = c
 
 	// add Ids to freeIds
 	return c, nil
