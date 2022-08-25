@@ -22,11 +22,14 @@ func handleDbUpdates(d *Drsm) {
 	//pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"$or", bson.A{ bson.D{{"type", "keepalive"}} }}},}}}
 	//pipeline := /mongo.Pipeline{bson.D{{"$match",bson.M{{"type": "keepalive"}}}}}) //, options.ChangeStream().SetFullDocument(options.UpdateLookup))
 
-	//create stream to monitor actions on the collection
-	updateStream, err := collection.Watch(context.TODO(), pipeline)
+	for {
+		//create stream to monitor actions on the collection
+		updateStream, err := collection.Watch(context.TODO(), pipeline)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			time.Sleep(5000 * time.Millisecond)
+			continue
+		}
 	}
 	routineCtx, _ := context.WithCancel(context.Background())
 	//run routine to get messages from stream
