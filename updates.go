@@ -30,10 +30,10 @@ func handleDbUpdates(d *Drsm) {
 			time.Sleep(5000 * time.Millisecond)
 			continue
 		}
+		routineCtx, _ := context.WithCancel(context.Background())
+		//run routine to get messages from stream
+		iterateChangeStream(d, routineCtx, updateStream)
 	}
-	routineCtx, _ := context.WithCancel(context.Background())
-	//run routine to get messages from stream
-	iterateChangeStream(d, routineCtx, updateStream)
 }
 
 type UpdatedFields struct {
