@@ -33,13 +33,26 @@ func handleDbUpdates(d *Drsm) {
 	iterateChangeStream(d, routineCtx, updateStream)
 }
 
-/*
-type  xyz struct {
-	Id      string  `bson:"_id,omitempty" json:"_id,omitempty"`
-    PodId   string  `bson:"podId,omitempty`
-	Timestamp     time.Time       `bson:"time,omitempty"`
-    Type          string `bson:"type",omitempty"`
+type xyz struct {
+	Id        string    `bson:"_id,omitempty" json:"_id,omitempty"`
+	PodId     string    `bson:"podId,omitempty`
+	Timestamp time.Time `bson:"time,omitempty"`
+	Type      string    `bson:"type",omitempty"`
 }
+type abc struct {
+	Full   xyz    `bson:"fullDocument,omitempty"`
+	OpType string `bson:operationType,omitempty`
+}
+
+/*
+ map[
+        _id:map[_data:826306F004000000032B022C0100296E5A1004EC0A378B4B3044C28DF4F18548BC3974463C5F6964003C6462746573746170702D6262346334636462342D6A687A6C7A000004]
+        clusterTime:{1661399044 3}
+        documentKey:map[_id:dbtestapp-bb4c4cdb4-jhzlz]
+        fullDocument:map[_id:dbtestapp-bb4c4cdb4-jhzlz expireAt:1661399064504 podId:dbtestapp-bb4c4cdb4-jhzlz time:1661399044 type:keepalive]
+        ns:map[coll:ngapid db:sdcore]
+        operationType:insert]
+
 */
 
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
@@ -57,19 +70,18 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		if err := stream.Decode(&data); err != nil {
 			panic(err)
 		}
+		var s abc
+		bsonBytes, _ := bson.Marshal(data)
+		bson.Unmarshal(bsonBytes, &s)
 		// If new Pod detected then send it on channel.. d->newPod
 		// If existing Pod goes down. d->podDown
+		log.Printf("decoded bson %v ", s)
 		log.Println("iterate stream : ", data)
 		for k := range data {
 			log.Println("k,v : ", k, data[k])
-			if k == "operationType" && data[k] == "insert" {
-				full := data["fullDocument"]
-				//var f interface{}
-				//json.Unmarshal(full, &f)
-				mymap := full.(map[string]interface{})
-				log.Println("mymap : ", mymap)
-				// _id:dbtestapp-bb4c4cdb4-jhzlz expireAt:1661399064504 podId:dbtestapp-bb4c4cdb4-jhzlz time:1661399044 type:keepalive
-			}
+			//if k == "operationType" && data[k] == "insert" {
+			//    //fullDocument:map[_id:dbtestapp-bb4c4cdb4-jhzlz expireAt:1661399064504 podId:dbtestapp-bb4c4cdb4-jhzlz time:1661399044 type:keepalive]
+			//}
 		}
 	}
 }
