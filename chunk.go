@@ -30,7 +30,7 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	// 14 bits --- 1,2,4,8,16
 	var cn int32 = 1
 	for {
-		cn = rand.Int32(16000)
+		cn = rand.Int31n(16000)
 		_, found := d.globalChunkTbl[cn]
 		if found == true {
 			continue
