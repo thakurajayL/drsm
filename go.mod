@@ -3,7 +3,7 @@ module github.com/thakurajayL/drsm
 go 1.18
 
 require (
-	github.com/omec-project/MongoDBLibrary v1.1.3
+	github.com/omec-project/MongoDBLibrary v1.1.4-0.20220825211024-3bacf8295862
 	go.mongodb.org/mongo-driver v1.10.1
 )
 
