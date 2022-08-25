@@ -2,6 +2,7 @@ package drsm
 
 import (
 	"fmt"
+    "log"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"math/rand"
@@ -27,9 +28,10 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 
 	log.Println("Allocate new chunk ")
 	// 14 bits --- 1,2,4,8,16
-	var cb int32
+	var cn int32 = 1
+/*
 	for {
-		cn = rand.int32(16000)
+		cn = rand.Int32(16000)
 		_, found := d.globalChunkTbl[cn]
 		if found == true {
 			continue
@@ -37,11 +39,12 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 		log.Println("Found chunk Id block ", cn)
 		break
 	}
+*/
 	// Let's confirm if this gets updated in DB
 	docId := fmt.Sprintf("chunkid-%s", cn)
 	filter := bson.M{"_id": docId}
-	update := bson.D{{"_id", docId}, {"type", "chunk"}, {"podId", d.clientId.PodName}}
-	_, err := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
+	update := bson.M{"_id": docId, "type": "chunk","podId": d.clientId.PodName}
+	err := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
 	if err != nil {
 		log.Println("put data failed : ", err)
 		return

@@ -11,3 +11,5 @@ Testing
 TODO:
     1. min REST APIs to trigger { allocate, claim }
     2. Rst counter to be appended to identify pod.
+    3. Database module handlign multiple connections.
+    4. PostAPI to accept customData
