@@ -35,7 +35,7 @@ func handleDbUpdates(d *Drsm) {
 
 type UpdatedFields struct {
 	Timestamp time.Time `bson:"time,omitempty"`
-	ExpireAt  time.Time `bson:"time,omitempty"`
+	ExpireAt  time.Time `bson:"expireAt,omitempty"`
 }
 
 type UpdatedDesc struct {
@@ -46,7 +46,7 @@ type FullStream struct {
 	Id        string    `bson:"_id,omitempty"`
 	PodId     string    `bson:"podId,omitempty"`
 	Timestamp time.Time `bson:"time,omitempty"`
-	ExpireAt  time.Time `bson:"time,omitempty"`
+	ExpireAt  time.Time `bson:"expireAt,omitempty"`
 	Type      string    `bson:"type,omitempty"`
 }
 
