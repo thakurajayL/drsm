@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/omec-project/MongoDBLibrary"
 	"log"
+	"rand"
+	"time"
 )
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
@@ -15,6 +17,9 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
 	d.newPod = make(chan string, 10)
 	d.podDown = make(chan string, 10)
 	d.scanChunk = make(chan int32, 10)
+
+	t := time.Now().UnixNano()
+	rand.Seed(t)
 
 	//connect to DB
 	MongoDBLibrary.SetMongoDB(db.Name, db.Url)
