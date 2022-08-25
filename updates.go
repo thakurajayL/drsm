@@ -139,7 +139,6 @@ func punchLiveness(d *Drsm) {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("punch liveness goroutine ", d.sharedPoolName)
 			filter := bson.M{"_id": d.clientId.PodName}
 			now := time.Now()
 
@@ -153,7 +152,6 @@ func punchLiveness(d *Drsm) {
 				log.Println("put data failed : ", err)
 				return
 			}
-			log.Println("punch liveness goroutine complete")
 		}
 	}
 }

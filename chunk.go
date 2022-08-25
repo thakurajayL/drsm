@@ -1,5 +1,12 @@
 package drsm
 
+import (
+	"fmt"
+	"github.com/omec-project/MongoDBLibrary"
+	"go.mongodb.org/mongo-driver/bson"
+	"math/rand"
+)
+
 type Chunk struct {
 	Id       int32
 	Owner    PodId
@@ -18,8 +25,29 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	// We got to allocate new Chunk. We should select
 	// probable chunk number
 
-	var id int32 = 10
-	c := &Chunk{Id: id}
+	log.Println("Allocate new chunk ")
+	// 14 bits --- 1,2,4,8,16
+	var cb int32
+	for {
+		cn = rand.int32(16000)
+		_, found := d.globalChunkTbl[cn]
+		if found == true {
+			continue
+		}
+		log.Println("Found chunk Id block ", cn)
+		break
+	}
+	// Let's confirm if this gets updated in DB
+	docId := fmt.Sprintf("chunkid-%s", cn)
+	filter := bson.M{"_id": docId}
+	update := bson.D{{"_id", docId}, {"type", "chunk"}, {"podId", d.clientId.PodName}}
+	_, err := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
+	if err != nil {
+		log.Println("put data failed : ", err)
+		return
+	}
+
+	c := &Chunk{Id: cn}
 
 	d.localChunkTbl[id] = c
 
