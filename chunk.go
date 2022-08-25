@@ -5,7 +5,7 @@ import (
     "log"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
-	"math/rand"
+	//"math/rand"
 )
 
 type Chunk struct {
@@ -44,10 +44,11 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	docId := fmt.Sprintf("chunkid-%s", cn)
 	filter := bson.M{"_id": docId}
 	update := bson.M{"_id": docId, "type": "chunk","podId": d.clientId.PodName}
-	err := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
-	if err != nil {
+	inserted := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
+	if inserted != true {
 		log.Println("put data failed : ", err)
-		return
+		err := fmt.Errorf("Ids not available")
+		return 0, err
 	}
 
 	c := &Chunk{Id: cn}
