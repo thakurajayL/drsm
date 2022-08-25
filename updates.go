@@ -119,10 +119,10 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
 		log.Printf("decoded stream bson %+v ", s)
-		switch operationType {
+		switch s.operationType {
 		case "insert":
 			log.Println("insert operations")
-			full = &data.Full
+			full := &s.Full
 			switch full.Type {
 			case "keepalive":
 				log.Println("insert keepalive document")
