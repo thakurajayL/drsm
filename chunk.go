@@ -41,7 +41,7 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	}
 */
 	// Let's confirm if this gets updated in DB
-	docId := fmt.Sprintf("chunkid-%s", cn)
+	docId := fmt.Sprintf("chunkid-%d", cn)
 	filter := bson.M{"_id": docId}
 	update := bson.M{"_id": docId, "type": "chunk","podId": d.clientId.PodName}
 	inserted := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
