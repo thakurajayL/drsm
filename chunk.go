@@ -2,9 +2,9 @@ package drsm
 
 import (
 	"fmt"
-    "log"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 	//"math/rand"
 )
 
@@ -29,29 +29,33 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 	log.Println("Allocate new chunk ")
 	// 14 bits --- 1,2,4,8,16
 	var cn int32 = 1
-/*
-	for {
-		cn = rand.Int32(16000)
-		_, found := d.globalChunkTbl[cn]
-		if found == true {
-			continue
+	/*
+		for {
+			cn = rand.Int32(16000)
+			_, found := d.globalChunkTbl[cn]
+			if found == true {
+				continue
+			}
+			log.Println("Found chunk Id block ", cn)
+			break
 		}
-		log.Println("Found chunk Id block ", cn)
-		break
-	}
-*/
+	*/
 	// Let's confirm if this gets updated in DB
 	docId := fmt.Sprintf("chunkid-%d", cn)
 	filter := bson.M{"_id": docId}
-	update := bson.M{"_id": docId, "type": "chunk","podId": d.clientId.PodName}
+	update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName}
 	inserted := MongoDBLibrary.RestfulAPIPost(d.sharedPoolName, filter, update)
 	if inserted != true {
-		log.Printf("Adding chunk %v failed ",cn)
+		log.Printf("Adding chunk %v failed ", cn)
 		err := fmt.Errorf("Ids not available")
 		return nil, err
 	}
 
+	log.Printf("Adding chunk %v success ", cn)
 	c := &Chunk{Id: cn}
+	for i := range 1000 {
+		c.FreeIds = append(c.FreeIds, i)
+	}
 
 	d.localChunkTbl[cn] = c
 
@@ -60,6 +64,10 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 }
 
 func (c *Chunk) AllocateIntID() int32 {
+	if len(c.FreeIds) == 0 {
+		log.Println("FreeIds in chunk 0")
+		return 0
+	}
 	id := c.FreeIds[len(c.FreeIds)-1]
 	c.FreeIds = c.FreeIds[:len(c.FreeIds)-1]
 	return (c.Id << 10) | id
