@@ -5,7 +5,7 @@ import (
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
-	//"math/rand"
+	"math/rand"
 )
 
 type Chunk struct {
