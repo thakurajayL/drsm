@@ -62,8 +62,8 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		log.Println("iterate stream : ", data)
 		for k := range data {
 			log.Println("k,v : ", k, data[k])
-			if key == "operationType" && v == "insert" {
-				//full := data["fullDocument"]
+			if k == "operationType" && data[k] == "insert" {
+				full := data["fullDocument"]
 				//var f interface{}
 				//json.Unmarshal(full, &f)
 				mymap := full.(map[string]interface{})
