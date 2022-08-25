@@ -53,7 +53,8 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 
 	log.Printf("Adding chunk %v success ", cn)
 	c := &Chunk{Id: cn}
-	for i :=0 ; i <1000; i++ {
+    var i int32
+	for i =0 ; i <1000; i++ {
 		c.FreeIds = append(c.FreeIds, i)
 	}
 
