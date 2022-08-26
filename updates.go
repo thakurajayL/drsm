@@ -143,7 +143,7 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 					log.Println("chunk document id ", id)
 					z := strings.Split(id, "-")
 					log.Println("extracted chunk id ", z[1])
-					cid, err := strconv.ParseInt(z[1], 10, 32)
+					cid, err := int32(strconv.ParseInt(z[1], 10, 32))
 					pod.podChunks[cid] = &Chunk{Id: cid, Owner: full.PodId}
 					log.Println("pod.podChunks ", pod.podChunks)
 				}

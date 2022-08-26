@@ -20,7 +20,7 @@ type PodData struct {
 	PodId         PodId           `bson:"podId,omitempty" json:"podId,omitempty"`
 	Timestamp     time.Time       `bson:"time,omitempty" json:"time,omitempty"`
 	PrevTimestamp time.Time       `bson:"-" json:"-"`
-	podChunks     map[int32]Chunk `bson:"-" json:"-"`
+	podChunks     map[int32]*Chunk `bson:"-" json:"-"`
 }
 
 type PodHealth struct {

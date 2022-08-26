@@ -1,5 +1,12 @@
 # drsm
 Distributed Resource sharing go module
+
+Modes
+    - demux mode : just listen and get mapping about PODS and their resource assignments
+        * can be used by sctplb, upf-adapter
+    - client mode : Learn about other clients and their resource mappings
+        * can be used by AMF pods, SMF pod
+
 Testing
     1. All the DRSM clients discover other clients through pub/sub
     2. Allocate id ( indirectly chunk). Other Pods should get notification of newly allocated chunk
