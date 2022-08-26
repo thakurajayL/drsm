@@ -8,20 +8,12 @@ import (
 	"math/rand"
 )
 
-type Chunk struct {
-	Id       int32
-	Owner    PodId
-	State    ChunkState
-	FreeIds  []int32
-	AllocIds map[int32]bool
-}
-
-func (c *Chunk) GetOwner() PodId {
-	return c.Owner
+func (c *Chunk) GetOwner() *PodId {
+	return &c.Owner
 
 }
 
-func GetNewChunk(d *Drsm) (*Chunk, error) {
+func (d *Drsm) GetNewChunk() (*Chunk, error) {
 	// Get new Chunk
 	// We got to allocate new Chunk. We should select
 	// probable chunk number
@@ -53,6 +45,7 @@ func GetNewChunk(d *Drsm) (*Chunk, error) {
 
 	log.Printf("Adding chunk %v success ", cn)
 	c := &Chunk{Id: cn}
+	c.AllocIds = make(map[int32]bool)
 	var i int32
 	for i = 0; i < 1000; i++ {
 		c.FreeIds = append(c.FreeIds, i)

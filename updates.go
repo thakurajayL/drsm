@@ -15,6 +15,7 @@ import (
 
 type UpdatedFields struct {
 	ExpireAt time.Time `bson:"expireAt,omitempty"`
+	PodId    string    `bson:"podId,omitempty"`
 }
 
 type UpdatedDesc struct {
@@ -74,10 +75,19 @@ map[
         ns:map[coll:ngapid db:sdcore]
         operationType:insert]
 
+
+map[
+        _id:map[_data:8263085773000000022B022C0100296E5A1004E23062383C624633BDEE5B9B5FEAB2B8463C5F6964003C6368756E6B69642D38333332000004]
+        clusterTime:{1661491059 2}
+        documentKey:map[_id:chunkid-8332]
+        ns:map[coll:ngapid db:sdcore]
+        operationType:update
+        updateDescription:map[removedFields:[] updatedFields:map[podId:dbtestapp-6dc68f9f68-7fwj8]]]
+
 */
 
 // handle incoming db notification and update
-func handleDbUpdates(d *Drsm) {
+func (d *Drsm) handleDbUpdates() {
 	database := MongoDBLibrary.Client.Database(d.db.Name)
 	collection := database.Collection(d.sharedPoolName)
 
@@ -120,10 +130,9 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		// If new Pod detected then send it on channel.. d->newPod
 		// If existing Pod goes down. d->podDown
 		log.Println("iterate stream : ", data)
-		log.Printf("decoded stream bson %+v ", s)
+		log.Printf("\ndecoded stream bson %+v \n", s)
 		switch s.OpType {
 		case "insert":
-			log.Println("insert operations")
 			full := &s.Full
 			switch full.Type {
 			case "keepalive":
@@ -132,31 +141,66 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 				if found == false {
 					podI := PodId{PodName: full.PodId}
 					pod := &PodData{PodId: podI}
+					pod.podChunks = make(map[int32]*Chunk)
 					d.podMap[full.PodId] = pod
-					log.Println("d.podMaps ", d.podMap[full.PodId])
+					log.Printf("Keepalive insert d.podMaps %+v", d.podMap)
+				} else {
+					log.Println("insert keepalive document : found existing podId ", pod)
 				}
 			case "chunk":
 				log.Println("insert chunk document")
 				pod, found := d.podMap[full.PodId]
-				if found == true {
-					id := full.Id
-					log.Println("chunk document id ", id)
-					z := strings.Split(id, "-")
-					log.Println("extracted chunk id ", z[1])
-					cid, err := int32(strconv.ParseInt(z[1], 10, 32))
-					pod.podChunks[cid] = &Chunk{Id: cid, Owner: full.PodId}
-					log.Println("pod.podChunks ", pod.podChunks)
+				if found == false {
+					podI := PodId{PodName: full.PodId}
+					pod = &PodData{PodId: podI}
+					pod.podChunks = make(map[int32]*Chunk)
+					d.podMap[full.PodId] = pod
+					log.Printf("Chunk insert  d.podMaps %+v", d.podMap)
+
 				}
+				id := full.Id
+				log.Println("chunk document id ", id)
+				z := strings.Split(id, "-")
+				log.Println("extracted chunk id ", z[1])
+				cid, _ := strconv.ParseInt(z[1], 10, 32)
+				c := int32(cid)
+				o := PodId{PodName: full.PodId}
+				cp := &Chunk{Id: c, Owner: o}
+				pod.podChunks[c] = cp
+				d.globalChunkTbl[c] = cp
+				log.Println("pod.podChunks ", pod.podChunks)
 			}
 		case "update":
 			log.Println("update operations")
+			z := strings.Split(s.DId.Id, "-")
+			if len(z) == 2 && z[0] == "chunkid" {
+				// update on chunkId..
+				// looks like chunk owner getting change
+				owner := s.Update.UpdFields.PodId
+				cid, _ := strconv.ParseInt(z[1], 10, 32)
+				c := int32(cid)
+				cp := d.globalChunkTbl[c]
+				cp.Owner.PodName = owner // TODO update IP address as well.
+				podD := d.podMap[owner]
+				podD.podChunks[c] = cp // add chunk to pod
+				log.Printf("pod to chunk map %v ", podD.podChunks)
+			}
 		case "delete":
 			log.Println("delete operations")
+			x := strings.Split(s.DId.Id, "chunkid")
+			if len(x) == 1 {
+				// not chunk type doc. So its POD doc.
+				// delete olnly gets document id
+				pod, found := d.podMap[s.DId.Id]
+				log.Printf("Pod %v and  found %v", pod, found)
+				log.Printf("Chunks owned by crashed Pod = %v ", pod.podChunks)
+				d.podDown <- s.DId.Id
+			}
 		}
 	}
 }
 
-func startDiscovery(d *Drsm) {
+func (d *Drsm) startDiscovery() {
 	// we discover other endpoints sharing same shared resources through mongoDB streaming
 	// Temp : punch liveness in DB every 2 second
 	// DB will send notification to every other POD..

@@ -2,30 +2,18 @@ package drsm
 
 import (
 	"fmt"
-	"github.com/omec-project/MongoDBLibrary"
 	"log"
-	"math/rand"
-	"time"
 )
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo) (*Drsm, error) {
+	log.Println("****MY ID ", myid)
+
 	d := &Drsm{sharedPoolName: sharedPoolName,
 		clientId: myid,
 		db:       db}
-	d.localChunkTbl = make(map[int32]*Chunk)
-	d.globalChunkTbl = make(map[int32]*Chunk)
-	d.newPod = make(chan string, 10)
-	d.podDown = make(chan string, 10)
-	d.scanChunk = make(chan int32, 10)
 
-	t := time.Now().UnixNano()
-	rand.Seed(t)
+	d.ConstuctDrsm()
 
-	//connect to DB
-	MongoDBLibrary.SetMongoDB(db.Name, db.Url)
-	log.Println("SetMongoDB done ", db.Name)
-	go handleDbUpdates(d)
-	go startDiscovery(d)
 	return d, nil
 }
 
@@ -35,7 +23,7 @@ func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
 			return c.AllocateIntID(), nil
 		}
 	}
-	c, err := GetNewChunk(d)
+	c, err := d.GetNewChunk()
 	if err != nil {
 		err := fmt.Errorf("Ids not available")
 		return 0, err
@@ -54,13 +42,13 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
 	return err
 }
 
-func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (string, error) {
+func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (*PodId, error) {
 	chunkId := id >> 10
-	chunk, found := d.localChunkTbl[chunkId]
+	chunk, found := d.globalChunkTbl[chunkId]
 	if found == true {
 		podId := chunk.GetOwner()
-		return podId.PodName, nil
+		return podId, nil
 	}
 	err := fmt.Errorf("Unknown Id")
-	return "", err
+	return nil, err
 }

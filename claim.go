@@ -2,9 +2,12 @@ package drsm
 
 import (
 	"fmt"
+	"github.com/omec-project/MongoDBLibrary"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (d *Drsm) podDownDetected() {
+	fmt.Println("Started Pod Down goroutine")
 	for {
 		select {
 		case p := <-d.podDown:
@@ -22,8 +25,15 @@ func (d *Drsm) podDownDetected() {
 
 func (c *Chunk) claimChunk(d *Drsm) {
 	// try to claim. If success then notification will update owner.
-	claimSuccess := true
-	if claimSuccess == true {
-		d.scanChunk <- c.Id
+	fmt.Println("claimChunk started")
+	docId := fmt.Sprintf("chunkid-%d", c.Id)
+	update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName}
+	filter := bson.M{"_id": docId, "podId": c.Owner.PodName}
+	updated := MongoDBLibrary.RestfulAPIPutOnly(d.sharedPoolName, filter, update)
+	if updated == nil {
+		// TODO : don't add to local pool yet. We can add it only if scan is done.
+		fmt.Println("claimChunk success ")
+	} else {
+		fmt.Println("claimChunk failure ")
 	}
 }
