@@ -15,22 +15,25 @@ Dependency
     - MongoDB should run in cluster(replicaset) Mode or sharded Mode
 
 Testing
-    1. All the DRSM clients discover other clients through pub/sub
-    2. Allocate resource id ( indirectly chunk). Other Pods should get notification of newly allocated chunk
-    3. POD down event should be detected
-    4. Get candidate ORPHAN chunk list once POD down detected
-    5. CLAIM chunk to change owner
-    6. Through notification other PODS should detect if CHUNK is claimed
-    7. Run large number of clients and bring down replicaset by 1..All other pod would try to claim chunks of crashed pod.
+    -  All the DRSM clients discover other clients through pub/sub
+    -  Allocate resource id ( indirectly chunk). Other Pods should get notification of newly allocated chunk
+    -  POD down event should be detected
+    -  Get candidate ORPHAN chunk list once POD down detected
+    -  CLAIM chunk to change owner
+    -  Through notification other PODS should detect if CHUNK is claimed
+    -  Run large number of clients and bring down replicaset by 1..All other pod would try to claim chunks of crashed pod.
        we should see only 1 client claiming it successfully
+    -  MongoDB instance restart
 
 TODO:
-    1. min REST APIs to trigger { allocate, claim }
-    2. Rst counter to be appended to identify pod.
-    5. Update document needs to figure out if its update for Chunk or update for Keepalive, since we are sharing collection
-    7. Clear Separation of demux API vs regular CLIENT API
-    8. PodId should be = K8s Pod Id + Rst Count. This makes sure that restarted pod even if it comes with same name then we treat it differently
-    9. callback should be available where chunk scanning can be done with help of application
-    3. Database module handlign multiple connections.
-    6. IP address allocation
-    4. PostAPI to accept customData
+    -  What happens if app call setMongoDB separately and also initializes the drsm
+    -  Clear Separation of demux API vs regular CLIENT API
+    -  callback should be available where chunk scanning (resource id usage) can be done with help of application
+    -  Rst counter to be appended to identify pod.
+    -  provide IP address also as pod identify
+    -  min REST APIs to trigger { allocate, claim }
+    -  Update document needs to figure out if its update for Chunk or update for Keepalive, since we are sharing collection
+    -  PodId should be = K8s Pod Id + Rst Count. This makes sure that restarted pod even if it comes with same name then we treat it differently
+    -  Database module handlign multiple connections.
+    -  IP address allocation
+    -  PostAPI to accept customData

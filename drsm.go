@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-type DbInfo struct {
-	Url  string
-	Name string
-}
-
 type ChunkState int
 
 const (
@@ -20,6 +15,7 @@ const (
 	Owned
 	PeerOwned
 	Orphan
+    Scanning
 )
 
 type Chunk struct {
@@ -28,11 +24,8 @@ type Chunk struct {
 	State    ChunkState
 	FreeIds  []int32
 	AllocIds map[int32]bool
-}
-
-type PodId struct {
-	PodName string `bson:"podName,omitempty" json:"podName,omitempty"`
-	PodIp   string `bson:"podIp,omitempty" json:"podIp,omitempty"`
+    stopScan chan bool
+    scanCb   func(int32)bool
 }
 
 type PodData struct {
@@ -48,21 +41,23 @@ type Drsm struct {
 	sharedPoolName string
 	clientId       PodId
 	db             DbInfo
+    mode           DrsmMode
 	localChunkTbl  map[int32]*Chunk    // chunkid to chunk
 	globalChunkTbl map[int32]*Chunk    // chunkid to chunk
 	podMap         map[string]*PodData // podId to podData
 	newPod         chan string
 	podDown        chan string
-	scanChunk      chan int32
 }
 
-func (d *Drsm) ConstuctDrsm() {
+func (d *Drsm) ConstuctDrsm(opt *Options) {
+	if opt != nil {
+		d.mode = opt.Mode
+	}
 	d.localChunkTbl = make(map[int32]*Chunk)
 	d.globalChunkTbl = make(map[int32]*Chunk)
 	d.podMap = make(map[string]*PodData)
 	d.newPod = make(chan string, 10)
 	d.podDown = make(chan string, 10)
-	d.scanChunk = make(chan int32, 10)
 	t := time.Now().UnixNano()
 	rand.Seed(t)
 	//connect to DB

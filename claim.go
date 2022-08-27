@@ -24,6 +24,10 @@ func (d *Drsm) podDownDetected() {
 }
 
 func (c *Chunk) claimChunk(d *Drsm) {
+	if d.mode != ResourceClient {
+		fmt.Println("claimChunk ignored demux mode ")
+		return
+	}
 	// try to claim. If success then notification will update owner.
 	fmt.Println("claimChunk started")
 	docId := fmt.Sprintf("chunkid-%d", c.Id)
@@ -33,6 +37,7 @@ func (c *Chunk) claimChunk(d *Drsm) {
 	if updated == nil {
 		// TODO : don't add to local pool yet. We can add it only if scan is done.
 		fmt.Println("claimChunk success ")
+		go c.ScanChunk(d)
 	} else {
 		fmt.Println("claimChunk failure ")
 	}
