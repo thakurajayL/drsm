@@ -23,7 +23,12 @@ Testing
     -  Through notification other PODS should detect if CHUNK is claimed
     -  Run large number of clients and bring down replicaset by 1..All other pod would try to claim chunks of crashed pod.
        we should see only 1 client claiming it successfully
+    -  Allocate more than 1000 ids.. See if New chunk is allocated
     -  MongoDB instance restart
+    -  If some pod is started late and already there are number of documents in collections. Then does stream provide
+       old docs as well ?
+    - Test if same chunk added to DB..Does DRSM handle error and retry other Chunk
+    - Multiple Pods trying to allocate same Chunkid. dbInsert only succeeds for one client
 
 TODO:
     -  What happens if app call setMongoDB separately and also initializes the drsm

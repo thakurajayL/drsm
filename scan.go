@@ -2,10 +2,10 @@ package drsm
 
 import (
 	"log"
-    "time"
+	"time"
 )
 
-func (c *Chunk) ScanChunk(d *Drsm) {
+func (c *chunk) scanChunk(d *Drsm) {
 	if d.mode == ResourceDemux {
 		log.Println("Don't perform scan task when demux mode is ON")
 		return
@@ -16,36 +16,20 @@ func (c *Chunk) ScanChunk(d *Drsm) {
 		return
 	}
 	c.State = Scanning
+	d.scanChunks[c.Id] = c
 
-	var maindone chan bool
-	var done chan bool
-
-	go func() {
-		// keep calling scan callback
-		// once done give back signal to main routine
-		ticker := time.NewTicker(5000 * time.Millisecond)
-		for {
-			select {
-			case <-maindone:
-				log.Printf("Received Stop Scan. Closing scan for %v", c.Id)
-			case <-ticker.C:
-				log.Printf("Lets scan one by one id for %v", c.Id)
-				c.scanCb(c.Id)
-				done <- true
-			}
-		}
-	}()
-
+	ticker := time.NewTicker(5000 * time.Millisecond)
+	defer ticker.Stop()
 	for {
 		select {
-		case <-done:
-			log.Printf("Scanning complete for %v", c.Id)
-			return
+		case <-ticker.C:
+			log.Printf("Lets scan one by one id for %v", c.Id)
+			// TODO : find candidate and then scan that Id.
+			// once all Ids are scanned then we can start using this block
+			c.scanCb(c.Id)
 		case <-c.stopScan:
 			log.Printf("Received Stop Scan. Closing scan for %v", c.Id)
 			return
 		}
 	}
-	// add Chunk in the scan list
-	// we should plan 1 query/second;
 }

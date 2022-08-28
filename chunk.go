@@ -6,14 +6,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"math/rand"
+	"strconv"
+	"strings"
 )
 
-func (c *Chunk) GetOwner() *PodId {
+func (c *chunk) GetOwner() *PodId {
 	return &c.Owner
 
 }
 
-func (d *Drsm) GetNewChunk() (*Chunk, error) {
+func (d *Drsm) GetNewChunk() (*chunk, error) {
 	// Get new Chunk
 	// We got to allocate new Chunk. We should select
 	// probable chunk number
@@ -23,7 +25,7 @@ func (d *Drsm) GetNewChunk() (*Chunk, error) {
 	var cn int32 = 1
 	for {
 		for {
-			cn = rand.Int31n(16000)
+			cn = rand.Int31n(d.chunkIdRange)
 			_, found := d.globalChunkTbl[cn]
 			if found == true {
 				continue
@@ -44,20 +46,21 @@ func (d *Drsm) GetNewChunk() (*Chunk, error) {
 	}
 
 	log.Printf("Adding chunk %v success ", cn)
-	c := &Chunk{Id: cn}
+	c := &chunk{Id: cn}
 	c.AllocIds = make(map[int32]bool)
 	var i int32
 	for i = 0; i < 1000; i++ {
 		c.FreeIds = append(c.FreeIds, i)
 	}
 
+	c.scanCb = d.scanCb
 	d.localChunkTbl[cn] = c
 
 	// add Ids to freeIds
 	return c, nil
 }
 
-func (c *Chunk) AllocateIntID() int32 {
+func (c *chunk) AllocateIntID() int32 {
 	if len(c.FreeIds) == 0 {
 		log.Println("FreeIds in chunk 0")
 		return 0
@@ -67,8 +70,25 @@ func (c *Chunk) AllocateIntID() int32 {
 	return (c.Id << 10) | id
 }
 
-func (c *Chunk) ReleaseIntID(id int32) {
+func (c *chunk) ReleaseIntID(id int32) {
 	var i int32
 	i = id & 0x3ff
 	c.FreeIds = append(c.FreeIds, i)
+}
+
+func getChunIdFromDocId(id string) int32 {
+	z := strings.Split(id, "-")
+	if len(z) == 2 && z[0] == "chunkid" {
+		cid, _ := strconv.ParseInt(z[1], 10, 32)
+		c := int32(cid)
+		return c
+	}
+	return 0
+}
+func isChunkDoc(id string) bool {
+	z := strings.Split(id, "-")
+	if len(z) == 2 && z[0] == "chunkid" {
+		return true
+	}
+	return false
 }

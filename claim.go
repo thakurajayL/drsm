@@ -23,7 +23,7 @@ func (d *Drsm) podDownDetected() {
 	}
 }
 
-func (c *Chunk) claimChunk(d *Drsm) {
+func (c *chunk) claimChunk(d *Drsm) {
 	if d.mode != ResourceClient {
 		fmt.Println("claimChunk ignored demux mode ")
 		return
@@ -37,7 +37,9 @@ func (c *Chunk) claimChunk(d *Drsm) {
 	if updated == nil {
 		// TODO : don't add to local pool yet. We can add it only if scan is done.
 		fmt.Println("claimChunk success ")
-		go c.ScanChunk(d)
+		c.Owner.PodName = d.clientId.PodName
+		c.Owner.PodIp = d.clientId.PodIp
+		go c.scanChunk(d)
 	} else {
 		fmt.Println("claimChunk failure ")
 	}

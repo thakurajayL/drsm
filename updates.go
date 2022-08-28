@@ -2,14 +2,10 @@ package drsm
 
 import (
 	"context"
-	//"encoding/json"
 	"github.com/omec-project/MongoDBLibrary"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	//"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -33,7 +29,7 @@ type DocKey struct {
 	Id string `bson:"_id,omitempty"`
 }
 
-type abc struct {
+type streamDoc struct {
 	DId    DocKey      `bson:"documentKey,omitempty"`
 	OpType string      `bson:"operationType,omitempty"`
 	Full   FullStream  `bson:"fullDocument,omitempty"`
@@ -111,12 +107,12 @@ func (d *Drsm) handleDbUpdates() {
 func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.ChangeStream) {
 	log.Println("iterate change stream for podData ", d)
 
-	// step 1: update all other clients database
-	// case 1: Update Global Table in the Drsm with new chunk. There is possiblity of newPod added
-	// case 2: If podLivenessCheck results in Pod Down. Then inform Claim Thread.
-	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
-	// case 3: Update Global Table in the Drsm, existing chunk new owner = ORPHAN
-	// case 2: Update Global Table in the Drsm, existing chunk new owner != ORPHAN i.e. somebody claimed the Chunk
+	// step 1: Get Pod Keepalive triggers and create POD table
+	// case 2: Update Global Chunk Table.
+	// case 3: New POD addition
+	// case 4: New chunk addition
+	// case 5: POD down - keepalive doc deleted. Then inform Claim go routine.
+	// case 6: Chunk owner change - claim
 
 	defer stream.Close(routineCtx)
 	for stream.Next(routineCtx) {
@@ -124,92 +120,55 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 		if err := stream.Decode(&data); err != nil {
 			panic(err)
 		}
-		var s abc
+		var s streamDoc
 		bsonBytes, _ := bson.Marshal(data)
 		bson.Unmarshal(bsonBytes, &s)
-		// If new Pod detected then send it on channel.. d->newPod
-		// If existing Pod goes down. d->podDown
-		log.Println("iterate stream : ", data)
+		//log.Println("iterate stream : ", data)
 		log.Printf("\ndecoded stream bson %+v \n", s)
 		switch s.OpType {
 		case "insert":
 			full := &s.Full
 			switch full.Type {
 			case "keepalive":
-				log.Println("insert keepalive document")
+				//log.Println("insert keepalive document")
 				pod, found := d.podMap[full.PodId]
 				if found == false {
-					podI := PodId{PodName: full.PodId}
-					pod := &PodData{PodId: podI}
-					pod.podChunks = make(map[int32]*Chunk)
-					d.podMap[full.PodId] = pod
-					log.Printf("Keepalive insert d.podMaps %+v", d.podMap)
+					d.addPod(full)
 				} else {
-					log.Println("insert keepalive document : found existing podId ", pod)
+					log.Println("keepalive insert document : found existing podId ", pod)
 				}
 			case "chunk":
-				log.Println("insert chunk document")
-				pod, found := d.podMap[full.PodId]
-				if found == false {
-					podI := PodId{PodName: full.PodId}
-					pod = &PodData{PodId: podI}
-					pod.podChunks = make(map[int32]*Chunk)
-					d.podMap[full.PodId] = pod
-					log.Printf("Chunk insert  d.podMaps %+v", d.podMap)
-
-				}
-				id := full.Id
-				log.Println("chunk document id ", id)
-				z := strings.Split(id, "-")
-				log.Println("extracted chunk id ", z[1])
-				cid, _ := strconv.ParseInt(z[1], 10, 32)
-				c := int32(cid)
-				o := PodId{PodName: full.PodId}
-				cp := &Chunk{Id: c, Owner: o}
-				pod.podChunks[c] = cp
-				d.globalChunkTbl[c] = cp
-				log.Println("pod.podChunks ", pod.podChunks)
+				//log.Println("insert chunk document")
+				d.addChunk(full)
 			}
 		case "update":
 			log.Println("update operations")
-			z := strings.Split(s.DId.Id, "-")
-			if len(z) == 2 && z[0] == "chunkid" {
+			if isChunkDoc(s.DId.Id) == true {
 				// update on chunkId..
 				// looks like chunk owner getting change
 				owner := s.Update.UpdFields.PodId
-				cid, _ := strconv.ParseInt(z[1], 10, 32)
-				c := int32(cid)
+				c := getChunIdFromDocId(s.DId.Id)
 				cp := d.globalChunkTbl[c]
-				cp.Owner.PodName = owner // TODO update IP address as well.
+				// TODO update IP address as well.
+				cp.Owner.PodName = owner
 				podD := d.podMap[owner]
 				podD.podChunks[c] = cp // add chunk to pod
 				log.Printf("pod to chunk map %v ", podD.podChunks)
 			}
 		case "delete":
 			log.Println("delete operations")
-			x := strings.Split(s.DId.Id, "chunkid")
-			if len(x) == 1 {
+			if isChunkDoc(s.DId.Id) == false {
 				// not chunk type doc. So its POD doc.
 				// delete olnly gets document id
 				pod, found := d.podMap[s.DId.Id]
-				log.Printf("Pod %v and  found %v", pod, found)
-				log.Printf("Chunks owned by crashed Pod = %v ", pod.podChunks)
+				log.Printf("Pod %v and  found %v. Chunks owned by crashed pod = %v ", pod, found, pod.podChunks)
 				d.podDown <- s.DId.Id
 			}
 		}
 	}
 }
 
-func (d *Drsm) startDiscovery() {
-	// we discover other endpoints sharing same shared resources through mongoDB streaming
-	// Temp : punch liveness in DB every 2 second
-	// DB will send notification to every other POD..
-	// Every Pod monitors if drsm client missed keepalive for 5 times..
-	go punchLiveness(d)
-	go checkLiveness(d)
-}
-
-func punchLiveness(d *Drsm) {
+func (d *Drsm) punchLiveness() {
 	// write to DB - signature every 2 second
 	ticker := time.NewTicker(20000 * time.Millisecond)
 
@@ -239,7 +198,7 @@ func punchLiveness(d *Drsm) {
 	}
 }
 
-func checkLiveness(d *Drsm) {
+func (d *Drsm) checkAllChunks() {
 	// go through all pods to see if any pod is showing same old counter
 	// Mark it down locally
 	// Claiming the chunks can be reactive
@@ -247,17 +206,42 @@ func checkLiveness(d *Drsm) {
 	for {
 		select {
 		case <-ticker.C:
-			/*
-				for k, p := range d.podMap {
-					p.mu.Lock()
-					if p.PrevTimestamp.after(p.== p.currentCount {
-						d.podDown <- k // let claim thread work chunks assigned by this Pod.
-					} else {
-						p.prevCount = p.currentCount
-					}
-					p.mu.Unlock()
+			filter := bson.M{"type": "chunk"}
+			result := MongoDBLibrary.RestfulAPIGetMany(d.sharedPoolName, filter)
+			if result != nil {
+				for _, v := range result {
+					var s FullStream
+					bsonBytes, _ := bson.Marshal(v)
+					bson.Unmarshal(bsonBytes, &s)
+					log.Printf("Individual bson Element  %v  ", s)
+					d.addChunk(&s)
 				}
-			*/
+			}
 		}
 	}
+}
+
+func (d *Drsm) addChunk(full *FullStream) {
+	pod, found := d.podMap[full.PodId]
+	if found == false {
+		pod = d.addPod(full)
+	}
+	id := full.Id
+	c := getChunIdFromDocId(id)
+	o := PodId{PodName: full.PodId}
+	cp := &chunk{Id: c, Owner: o}
+
+	pod.podChunks[c] = cp
+	d.globalChunkTbl[c] = cp
+
+	log.Printf("Chunk id %v, pod.podChunks %v ", c, pod.podChunks)
+}
+
+func (d *Drsm) addPod(full *FullStream) *podData {
+	podI := PodId{PodName: full.PodId}
+	pod := &podData{PodId: podI}
+	pod.podChunks = make(map[int32]*chunk)
+	d.podMap[full.PodId] = pod
+	log.Printf("Keepalive insert d.podMaps %+v", d.podMap)
+	return pod
 }
