@@ -23,9 +23,9 @@ const (
 )
 
 type Options struct {
-	ResIdSize int32 //size in bits e.g. 32 bit, 24 bit.
-	Mode      DrsmMode
-	ScanCb    func(int32) bool
+	ResIdSize       int32 //size in bits e.g. 32 bit, 24 bit.
+	Mode            DrsmMode
+	ResourceValidCb func(int32) bool
 }
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm, error) {

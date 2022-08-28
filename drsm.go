@@ -19,13 +19,14 @@ const (
 )
 
 type chunk struct {
-	Id       int32
-	Owner    PodId
-	State    chunkState
-	FreeIds  []int32
-	AllocIds map[int32]bool
-	stopScan chan bool
-	scanCb   func(int32) bool
+	Id              int32
+	Owner           PodId
+	State           chunkState
+	FreeIds         []int32
+	AllocIds        map[int32]bool
+	ScannedIds      []int32
+	stopScan        chan bool
+	resourceValidCb func(int32) bool
 }
 
 type podData struct {
@@ -37,19 +38,19 @@ type podData struct {
 }
 
 type Drsm struct {
-	mu             sync.Mutex
-	sharedPoolName string
-	clientId       PodId
-	db             DbInfo
-	mode           DrsmMode
-	resIdSize      int32
-	localChunkTbl  map[int32]*chunk    // chunkid to chunk
-	globalChunkTbl map[int32]*chunk    // chunkid to chunk
-	podMap         map[string]*podData // podId to podData
-	podDown        chan string
-	scanChunks     map[int32]*chunk
-	chunkIdRange   int32
-	scanCb         func(int32) bool
+	mu              sync.Mutex
+	sharedPoolName  string
+	clientId        PodId
+	db              DbInfo
+	mode            DrsmMode
+	resIdSize       int32
+	localChunkTbl   map[int32]*chunk    // chunkid to chunk
+	globalChunkTbl  map[int32]*chunk    // chunkid to chunk
+	podMap          map[string]*podData // podId to podData
+	podDown         chan string
+	scanChunks      map[int32]*chunk
+	chunkIdRange    int32
+	resourceValidCb func(int32) bool
 }
 
 func (d *Drsm) ConstuctDrsm(opt *Options) {
@@ -61,7 +62,7 @@ func (d *Drsm) ConstuctDrsm(opt *Options) {
 		} else {
 			d.resIdSize = 24
 		}
-		d.scanCb = opt.ScanCb
+		d.resourceValidCb = opt.ResourceValidCb
 	}
 	d.chunkIdRange = 1 << (d.resIdSize - 10)
 	log.Println("ChunkId in the range of 0 to %v ", d.chunkIdRange)

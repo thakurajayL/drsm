@@ -226,15 +226,16 @@ func (d *Drsm) addChunk(full *FullStream) {
 	if found == false {
 		pod = d.addPod(full)
 	}
-	id := full.Id
-	c := getChunIdFromDocId(id)
+	did := full.Id
+	cid := getChunIdFromDocId(did)
 	o := PodId{PodName: full.PodId}
-	cp := &chunk{Id: c, Owner: o}
+	c := &chunk{Id: cid, Owner: o}
+	c.resourceValidCb = d.resourceValidCb
 
-	pod.podChunks[c] = cp
-	d.globalChunkTbl[c] = cp
+	pod.podChunks[cid] = c
+	d.globalChunkTbl[cid] = c
 
-	log.Printf("Chunk id %v, pod.podChunks %v ", c, pod.podChunks)
+	log.Printf("Chunk id %v, pod.podChunks %v ", cid, pod.podChunks)
 }
 
 func (d *Drsm) addPod(full *FullStream) *podData {

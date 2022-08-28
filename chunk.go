@@ -53,7 +53,7 @@ func (d *Drsm) GetNewChunk() (*chunk, error) {
 		c.FreeIds = append(c.FreeIds, i)
 	}
 
-	c.scanCb = d.scanCb
+	c.resourceValidCb = d.resourceValidCb
 	d.localChunkTbl[cn] = c
 
 	// add Ids to freeIds
