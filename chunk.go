@@ -36,7 +36,7 @@ func (d *Drsm) GetNewChunk() (*chunk, error) {
 		// Let's confirm if this gets updated in DB
 		docId := fmt.Sprintf("chunkid-%d", cn)
 		filter := bson.M{"_id": docId}
-		update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName}
+		update := bson.M{"_id": docId, "type": "chunk", "podId": d.clientId.PodName, "podIp": d.clientId.PodIp}
 		inserted := MongoDBLibrary.RestfulAPIPostOnly(d.sharedPoolName, filter, update)
 		if inserted != true {
 			log.Printf("Adding chunk %v failed. Retry again ", cn)
@@ -52,7 +52,7 @@ func (d *Drsm) GetNewChunk() (*chunk, error) {
 	for i = 0; i < 1000; i++ {
 		c.FreeIds = append(c.FreeIds, i)
 	}
-
+	c.State = Owned
 	c.resourceValidCb = d.resourceValidCb
 	d.localChunkTbl[cn] = c
 
@@ -74,6 +74,15 @@ func (c *chunk) ReleaseIntID(id int32) {
 	var i int32
 	i = id & 0x3ff
 	c.FreeIds = append(c.FreeIds, i)
+	if c.State == Scanning {
+		for k, v := range c.ScanIds {
+			if v == i {
+				c.ScanIds[k] = c.ScanIds[len(c.ScanIds)-1] // copy last element at index
+				c.ScanIds = c.ScanIds[:len(c.ScanIds)-1]   // now shrink list at tail side
+				break
+			}
+		}
+	}
 }
 
 func getChunIdFromDocId(id string) int32 {

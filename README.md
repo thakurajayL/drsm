@@ -2,7 +2,7 @@
 Distributed Resource Sharing Module (DRSM)
 
 Resources can be
-    - integer numbers (TEID, SEID, NGAPIDs,...)
+    - integer numbers (TEID, SEID, NGAPIDs,TMSI,...)
     - IP address pool
 
 Modes
@@ -14,6 +14,10 @@ Modes
 Dependency
     - MongoDB should run in cluster(replicaset) Mode or sharded Mode
 
+Limitation:
+    -  MongoDBlib keeps global client variable. So only 1 DB connection and 1 database allowed.
+    -  We can not have multiple Database connections with above limitation.
+
 Testing
     -  All the DRSM clients discover other clients through pub/sub
     -  Allocate resource id ( indirectly chunk). Other Pods should get notification of newly allocated chunk
@@ -23,22 +27,19 @@ Testing
     -  Through notification other PODS should detect if CHUNK is claimed
     -  Run large number of clients and bring down replicaset by 1..All other pod would try to claim chunks of crashed pod.
        we should see only 1 client claiming it successfully
-    -  Allocate more than 1000 ids.. See if New chunk is allocated
-    -  MongoDB instance restart
     -  If some pod is started late and already there are number of documents in collections. Then does stream provide
-       old docs as well ?
-    - Test if same chunk added to DB..Does DRSM handle error and retry other Chunk
-    - Multiple Pods trying to allocate same Chunkid. dbInsert only succeeds for one client
+       old docs as well ? No. Added code to read existing docs.
+    -  Multiple Pods trying to allocate same Chunkid. dbInsert only succeeds for one client. Does DRSM handle error and retry other Chunk
+    -  Clear Separation of demux API vs regular CLIENT API
+    -  Callback should be available where chunk scanning (resource id usage) can be done with help of application
+    -  Pod identity is IP address + Pod Name
 
 TODO:
-    -  What happens if app call setMongoDB separately and also initializes the drsm
-    -  Clear Separation of demux API vs regular CLIENT API
-    -  callback should be available where chunk scanning (resource id usage) can be done with help of application
-    -  Rst counter to be appended to identify pod.
-    -  provide IP address also as pod identify
+    -  IP address allocation
+    -  MongoDB instance restart
+    -  Rst counter to be appended to identify pod.PodId should be = K8s Pod Id + Rst Count. 
+       This makes sure that restarted pod even if it comes with same name then we treat it differently
+
+    -  Allocate more than 1000 ids.. See if New chunk is allocated
     -  min REST APIs to trigger { allocate, claim }
     -  Update document needs to figure out if its update for Chunk or update for Keepalive, since we are sharing collection
-    -  PodId should be = K8s Pod Id + Rst Count. This makes sure that restarted pod even if it comes with same name then we treat it differently
-    -  Database module handlign multiple connections.
-    -  IP address allocation
-    -  PostAPI to accept customData

@@ -24,7 +24,7 @@ type chunk struct {
 	State           chunkState
 	FreeIds         []int32
 	AllocIds        map[int32]bool
-	ScannedIds      []int32
+	ScanIds         []int32
 	stopScan        chan bool
 	resourceValidCb func(int32) bool
 }

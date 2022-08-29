@@ -25,7 +25,7 @@ const (
 type Options struct {
 	ResIdSize       int32 //size in bits e.g. 32 bit, 24 bit.
 	Mode            DrsmMode
-	ResourceValidCb func(int32) bool
+	ResourceValidCb func(int32) bool // return if ID is in use or not used
 }
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm, error) {
@@ -41,6 +41,7 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm
 	return d, nil
 }
 
+// TODO - api name 
 func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
 	if d.mode == ResourceDemux {
 		log.Println("Demux mode can not allocate Resource index ")
@@ -72,6 +73,12 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
 	if found == true {
 		chunk.ReleaseIntID(id)
 		return nil
+	} else {
+		chunk, found := d.scanChunks[chunkId]
+		if found == true {
+			chunk.ReleaseIntID(id)
+			return nil
+		}
 	}
 	err := fmt.Errorf("Unknown Id")
 	return err

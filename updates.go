@@ -21,6 +21,7 @@ type UpdatedDesc struct {
 type FullStream struct {
 	Id       string    `bson:"_id,omitempty"`
 	PodId    string    `bson:"podId,omitempty"`
+	PodIp    string    `bson:"podIp,omitempty"`
 	ExpireAt time.Time `bson:"expireAt,omitempty"`
 	Type     string    `bson:"type,omitempty"`
 }
@@ -169,8 +170,8 @@ func iterateChangeStream(d *Drsm, routineCtx context.Context, stream *mongo.Chan
 }
 
 func (d *Drsm) punchLiveness() {
-	// write to DB - signature every 2 second
-	ticker := time.NewTicker(20000 * time.Millisecond)
+	// write to DB - signature every 5 second
+	ticker := time.NewTicker(5000 * time.Millisecond)
 
 	log.Println(" document expiry enabled")
 	ret := MongoDBLibrary.RestfulAPICreateTTLIndex(d.sharedPoolName, 0, "expireAt")
@@ -183,16 +184,18 @@ func (d *Drsm) punchLiveness() {
 	for {
 		select {
 		case <-ticker.C:
+			log.Println(" update keepalive time")
 			filter := bson.M{"_id": d.clientId.PodName}
 
 			timein := time.Now().Local().Add(time.Second * 20)
 
-			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podId", d.clientId.PodName}, {"expireAt", timein}}
+			update := bson.D{{"_id", d.clientId.PodName}, {"type", "keepalive"}, {"podIp", d.clientId.PodIp}, {"podId", d.clientId.PodName}, {"expireAt", timein}}
 
 			_, err := MongoDBLibrary.PutOneCustomDataStructure(d.sharedPoolName, filter, update)
 			if err != nil {
 				log.Println("put data failed : ", err)
-				return
+				// TODO : should we panic ?
+				continue
 			}
 		}
 	}
@@ -202,7 +205,7 @@ func (d *Drsm) checkAllChunks() {
 	// go through all pods to see if any pod is showing same old counter
 	// Mark it down locally
 	// Claiming the chunks can be reactive
-	ticker := time.NewTicker(15000 * time.Millisecond)
+	ticker := time.NewTicker(3000 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
@@ -217,6 +220,8 @@ func (d *Drsm) checkAllChunks() {
 					d.addChunk(&s)
 				}
 			}
+			ticker.Stop()
+			return
 		}
 	}
 }
@@ -228,7 +233,7 @@ func (d *Drsm) addChunk(full *FullStream) {
 	}
 	did := full.Id
 	cid := getChunIdFromDocId(did)
-	o := PodId{PodName: full.PodId}
+	o := PodId{PodName: full.PodId, PodIp: full.PodIp}
 	c := &chunk{Id: cid, Owner: o}
 	c.resourceValidCb = d.resourceValidCb
 
@@ -239,7 +244,7 @@ func (d *Drsm) addChunk(full *FullStream) {
 }
 
 func (d *Drsm) addPod(full *FullStream) *podData {
-	podI := PodId{PodName: full.PodId}
+	podI := PodId{PodName: full.PodId, PodIp: full.PodIp}
 	pod := &podData{PodId: podI}
 	pod.podChunks = make(map[int32]*chunk)
 	d.podMap[full.PodId] = pod

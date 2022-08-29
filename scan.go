@@ -19,7 +19,7 @@ func (c *chunk) scanChunk(d *Drsm) {
 	d.scanChunks[c.Id] = c
 	var i int32
 	for i = 0; i < 1000; i++ {
-		c.ScannedIds = append(c.ScannedIds, i)
+		c.ScanIds = append(c.ScanIds, i)
 	}
 
 	ticker := time.NewTicker(5000 * time.Millisecond)
@@ -30,17 +30,30 @@ func (c *chunk) scanChunk(d *Drsm) {
 			log.Printf("Lets scan one by one id for %v , chunk details %v ", c.Id, c)
 			// TODO : find candidate and then scan that Id.
 			// once all Ids are scanned then we can start using this block
-			id := c.ScannedIds[len(c.ScannedIds)-1]
-			c.ScannedIds = c.ScannedIds[:len(c.ScannedIds)-1]
-			rid := c.Id<<10 | id
-			res := c.resourceValidCb(rid)
-			if res == true {
-				c.FreeIds = append(c.FreeIds, id)
-			} else {
-				c.ScannedIds = append(c.ScannedIds, id) // Moving to the end
+			if c.resourceValidCb != nil {
+				if len(c.ScanIds) != 0 {
+					id := c.ScanIds[len(c.ScanIds)-1]
+					c.ScanIds = c.ScanIds[:len(c.ScanIds)-1]
+					rid := c.Id<<10 | id
+					res := c.resourceValidCb(rid)
+					if res == true {
+						c.FreeIds = append(c.FreeIds, id)
+					} else {
+						c.ScanIds = append(c.ScanIds, id) // Moving to the end
+					}
+				} else {
+					// mark as owned. and remove from scan list and add to local table
+					c.State = Owned
+					d.localChunkTbl[c.Id] = c
+					delete(d.scanChunks, c.Id)
+					ticker.Stop()
+					log.Printf("Scan complete for Chunk %v", c.Id)
+					return
+				}
 			}
 		case <-c.stopScan:
 			log.Printf("Received Stop Scan. Closing scan for %v", c.Id)
+			ticker.Stop()
 			return
 		}
 	}
