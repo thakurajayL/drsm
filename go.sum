@@ -190,8 +190,6 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/mattn/go-sqlite3 v1.14.6 h1:dNPt6NO46WmLVt2DLNpwczCmdV5boIZ6g/tlDrlRUbg=
 github.com/mattn/go-sqlite3 v1.14.6/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/metal-stack/go-ipam v1.11.1 h1:7v6TMNqx5F8pEnxWbeS4Lk9KDIk7JT4imstA7he6Lsk=
-github.com/metal-stack/go-ipam v1.11.1/go.mod h1:lYCugB/E4gv3DPbDOxaViySFQuq4gzgZZFNCNMWbZyo=
 github.com/moby/sys/mount v0.3.3 h1:fX1SVkXFJ47XWDoeFW4Sq7PdQJnV2QIDZAqjNqgEjUs=
 github.com/moby/sys/mountinfo v0.6.2 h1:BzJjoreD5BMFNmD9Rus6gdd1pLuecOFPt8wC+Vygl78=
 github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 h1:dcztxKSvZ4Id8iPpHERQBbIJfabdt4wUm5qy3wOL2Zc=
@@ -270,8 +268,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/testcontainers/testcontainers-go v0.13.0 h1:OUujSlEGsXVo/ykPVZk3KanBNGN0TYb/7oKIPVn15JA=
-github.com/thakurajayL/go-ipam v0.0.0-20220830061555-2cdf6f677d0f h1:4PyTEPthC+X8LQ8tBKKKOzzzx25oVD0rJvavhF/AZ9A=
-github.com/thakurajayL/go-ipam v0.0.0-20220830061555-2cdf6f677d0f/go.mod h1:zIxYjy8URt6W6NiOM7BUhxd6KsX77WcbmmGx0vmdNYA=
+github.com/thakurajayL/go-ipam v0.0.0-20220830062402-55c96e82b384 h1:VGXbJYI1tPtivoaAV6Ri3lR96laOQQLIVOQ+vsj3TB0=
+github.com/thakurajayL/go-ipam v0.0.0-20220830062402-55c96e82b384/go.mod h1:J2OdFN3vE8q5POYIrrB/sU1M06zji1fc+sEJUFJCtsw=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
