@@ -26,6 +26,7 @@ type Options struct {
 	ResIdSize       int32 //size in bits e.g. 32 bit, 24 bit.
 	Mode            DrsmMode
 	ResourceValidCb func(int32) bool // return if ID is in use or not used
+	IpPool          map[string]string
 }
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm, error) {
@@ -41,8 +42,7 @@ func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm
 	return d, nil
 }
 
-// TODO - api name 
-func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
+func (d *Drsm) AllocateInt32ID() (int32, error) {
 	if d.mode == ResourceDemux {
 		log.Println("Demux mode can not allocate Resource index ")
 		err := fmt.Errorf("Demux mode does not allow Resource Id allocation")
@@ -61,7 +61,7 @@ func (d *Drsm) AllocateIntID(sharedPoolName string) (int32, error) {
 	return c.AllocateIntID(), nil
 }
 
-func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
+func (d *Drsm) ReleaseInt32ID(id int32) error {
 	if d.mode == ResourceDemux {
 		log.Println("Demux mode can not release Resource index ")
 		err := fmt.Errorf("Demux mode does not allow Resource Id allocation")
@@ -84,7 +84,7 @@ func (d *Drsm) ReleaseIntID(sharedPoolName string, id int32) error {
 	return err
 }
 
-func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (*PodId, error) {
+func (d *Drsm) FindOwnerInt32ID(id int32) (*PodId, error) {
 	chunkId := id >> 10
 	chunk, found := d.globalChunkTbl[chunkId]
 	if found == true {
@@ -93,4 +93,13 @@ func (d *Drsm) FindOwnerIntID(sharedPoolName string, id int32) (*PodId, error) {
 	}
 	err := fmt.Errorf("Unknown Id")
 	return nil, err
+}
+
+func (d *Drsm) AcquireIp(name string) (string, error) {
+	if d.mode == ResourceDemux {
+		log.Println("Demux mode can not allocate Ip ")
+		err := fmt.Errorf("Demux mode does not allow Resource allocation")
+		return "", err
+	}
+	return d.acquireIp(name)
 }

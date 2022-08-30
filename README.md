@@ -33,13 +33,12 @@ Testing
     -  Clear Separation of demux API vs regular CLIENT API
     -  Callback should be available where chunk scanning (resource id usage) can be done with help of application
     -  Pod identity is IP address + Pod Name
+    -  Allocate more than 1000 ids.. See if New chunk is allocated
 
 TODO:
+    - Release Id test
     -  IP address allocation
     -  MongoDB instance restart
     -  Rst counter to be appended to identify pod.PodId should be = K8s Pod Id + Rst Count. 
        This makes sure that restarted pod even if it comes with same name then we treat it differently
-
-    -  Allocate more than 1000 ids.. See if New chunk is allocated
     -  min REST APIs to trigger { allocate, claim }
-    -  Update document needs to figure out if its update for Chunk or update for Keepalive, since we are sharing collection

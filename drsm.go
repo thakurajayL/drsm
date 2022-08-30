@@ -2,6 +2,7 @@ package drsm
 
 import (
 	"github.com/omec-project/MongoDBLibrary"
+	ipam "github.com/thakurajayL/go-ipam"
 	"log"
 	"math/rand"
 	"sync"
@@ -51,6 +52,8 @@ type Drsm struct {
 	scanChunks      map[int32]*chunk
 	chunkIdRange    int32
 	resourceValidCb func(int32) bool
+	ipModule        ipam.Ipamer
+	prefix          *ipam.Prefix
 }
 
 func (d *Drsm) ConstuctDrsm(opt *Options) {
@@ -65,7 +68,7 @@ func (d *Drsm) ConstuctDrsm(opt *Options) {
 		d.resourceValidCb = opt.ResourceValidCb
 	}
 	d.chunkIdRange = 1 << (d.resIdSize - 10)
-	log.Println("ChunkId in the range of 0 to %v ", d.chunkIdRange)
+	log.Printf("ChunkId in the range of 0 to %v ", d.chunkIdRange)
 	d.localChunkTbl = make(map[int32]*chunk)
 	d.globalChunkTbl = make(map[int32]*chunk)
 	d.podMap = make(map[string]*podData)
@@ -73,6 +76,7 @@ func (d *Drsm) ConstuctDrsm(opt *Options) {
 	d.scanChunks = make(map[int32]*chunk)
 	t := time.Now().UnixNano()
 	rand.Seed(t)
+	d.initIpam(opt)
 
 	//connect to DB
 	MongoDBLibrary.SetMongoDB(d.db.Name, d.db.Url)
