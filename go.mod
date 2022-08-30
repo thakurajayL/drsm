@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/omec-project/MongoDBLibrary v0.0.1-devtemp
-	github.com/thakurajayL/go-ipam v0.0.0-20220830062402-55c96e82b384
+	github.com/thakurajayL/go-ipam v0.0.1-dev
 	go.mongodb.org/mongo-driver v1.10.1
 )
 
