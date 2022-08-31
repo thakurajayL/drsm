@@ -53,7 +53,7 @@ type Drsm struct {
 	chunkIdRange    int32
 	resourceValidCb func(int32) bool
 	ipModule        ipam.Ipamer
-	prefix          *ipam.Prefix
+	prefix          map[string]*ipam.Prefix
 }
 
 func (d *Drsm) ConstuctDrsm(opt *Options) {

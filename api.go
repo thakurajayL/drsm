@@ -30,7 +30,7 @@ type Options struct {
 }
 
 func InitDRSM(sharedPoolName string, myid PodId, db DbInfo, opt *Options) (*Drsm, error) {
-	log.Println("****MY ID ***** ", myid)
+	log.Println("CLIENT ID: ", myid)
 
 	d := &Drsm{sharedPoolName: sharedPoolName,
 		clientId: myid,
@@ -95,11 +95,20 @@ func (d *Drsm) FindOwnerInt32ID(id int32) (*PodId, error) {
 	return nil, err
 }
 
-func (d *Drsm) AcquireIp(name string) (string, error) {
+func (d *Drsm) AcquireIp(pool string) (string, error) {
 	if d.mode == ResourceDemux {
 		log.Println("Demux mode can not allocate Ip ")
 		err := fmt.Errorf("Demux mode does not allow Resource allocation")
 		return "", err
 	}
-	return d.acquireIp(name)
+	return d.acquireIp(pool)
+}
+
+func (d *Drsm) ReleaseIp(pool, ip string) error {
+	if d.mode == ResourceDemux {
+		log.Println("Demux mode can not Release Resource ")
+		err := fmt.Errorf("Demux mode does not allow Resource Release")
+		return err
+	}
+	return d.releaseIp(pool, ip)
 }
